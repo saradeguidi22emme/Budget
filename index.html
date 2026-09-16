@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Budget</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Budget">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FBFBFA">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23111111'/%3E%3Crect x='42' y='78' width='96' height='24' rx='12' fill='%233A3A3A'/%3E%3Crect x='42' y='78' width='60' height='24' rx='12' fill='%23EDF3EC'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111111'/%3E%3Crect x='7' y='14' width='18' height='5' rx='2.5' fill='%233A3A3A'/%3E%3Crect x='7' y='14' width='11' height='5' rx='2.5' fill='%23EDF3EC'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --fondo: #FBFBFA; --carta: #FFFFFF; --bordo: #EAEAEA;
+    --testo: #2F3437; --muto: #787774; --scuro: #111111;
+    --verde: #346538; --verde-chiaro: #EDF3EC;
+    --giallo: #956400; --giallo-chiaro: #FBF3DB;
+    --rosso: #9F2F2D; --rosso-chiaro: #FDEBEC;
+    --sans: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; background: var(--fondo); color: var(--testo);
+    font-family: var(--sans); -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  #app {
+    max-width: 440px; margin: 0 auto;
+    padding: calc(22px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  }
+  #app.con-barra { padding-bottom: calc(128px + env(safe-area-inset-bottom)); }
+
+  .testata { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .testata b { font-size: 15px; font-weight: 500; }
+  .tondo {
+    background: var(--carta); border: none; border-radius: 999px; width: 36px; height: 36px;
+    color: var(--muto); display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .gruppo { background: var(--carta); border-radius: 16px; padding: 4px 16px; margin-bottom: 12px; }
+  .gruppo.largo { padding: 22px; }
+  .gruppo.medio { padding: 16px; }
+  .titolo {
+    font-size: 11px; color: var(--muto); margin: 0 0 8px 4px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .riga {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 12px 0; border-bottom: 1px solid var(--fondo); font-size: 14px;
+  }
+  .riga:last-child, .riga.ultima { border-bottom: none; }
+  .riga .et { color: var(--muto); }
+  .riga.forte .va { font-weight: 500; }
+  .grande {
+    font-family: var(--serif); font-size: 52px; letter-spacing: -0.03em;
+    line-height: 1; margin: 12px 0 6px;
+  }
+  .grande .cent { font-size: 22px; color: var(--muto); }
+  .nota { font-size: 13px; color: var(--muto); margin: 0; }
+  .piccola { font-size: 12px; color: var(--muto); margin: -4px 4px 20px; line-height: 1.5; }
+
+  .barra { height: 10px; border-radius: 5px; background: var(--fondo); overflow: hidden; }
+  .barra > div { height: 100%; border-radius: 5px; transition: width .4s ease; }
+  .oggi { position: relative; height: 16px; margin-top: 3px; }
+  .oggi i { position: absolute; width: 1px; height: 5px; background: var(--muto); }
+  .oggi span { position: absolute; top: 5px; transform: translateX(-50%); font-size: 10px; color: var(--muto); }
+
+  button { font-family: var(--sans); cursor: pointer; }
+  .pieno {
+    background: var(--scuro); color: #fff; border: none; border-radius: 14px;
+    padding: 16px 0; font-size: 14px; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .vuoto {
+    background: var(--carta); color: var(--testo); border: none; border-radius: 14px;
+    padding: 16px 22px; font-size: 14px;
+  }
+  .pillola {
+    padding: 10px 15px; border-radius: 999px; font-size: 13px;
+    background: var(--carta); color: var(--muto); border: none;
+  }
+  .pillola.on { background: var(--scuro); color: #fff; }
+  .pillole { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+  input, textarea {
+    font-family: var(--sans); font-size: 16px; color: var(--testo);
+    background: var(--fondo); border: none; border-radius: 10px;
+    padding: 14px 12px; width: 100%; outline: none;
+  }
+  input.cifra {
+    font-family: var(--serif); font-size: 44px; letter-spacing: -0.03em;
+    background: transparent; padding: 0; border-radius: 0;
+  }
+  textarea { resize: none; font-size: 12px; }
+  .campo-cifra { display: flex; align-items: baseline; gap: 6px; }
+  .campo-cifra span { font-size: 22px; color: var(--muto); }
+
+  .fondo-fisso {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, var(--fondo) 62%, transparent);
+    padding: 30px 18px calc(18px + env(safe-area-inset-bottom));
+    display: flex; justify-content: center; pointer-events: none;
+  }
+  .fondo-fisso > div { width: 100%; max-width: 440px; pointer-events: auto; }
+  .due { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+
+  .avviso {
+    background: var(--rosso-chiaro); color: var(--rosso); font-size: 13px;
+    padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;
+  }
+  .vuota { font-size: 13px; color: var(--muto); margin: 18px 0; text-align: center; }
+  .x { background: none; border: none; color: var(--bordo); padding: 0; display: flex; }
+  .destra { display: flex; align-items: center; gap: 12px; }
+  .link {
+    width: 100%; background: var(--carta); border: none; border-radius: 16px; padding: 16px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--testo); margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+  "use strict";
+
+  var CHIAVE = "budget-personale-v3";
+
+  var CATEGORIE = [
+    { nome: "Spesa", cosa: "supermercato, mercato" },
+    { nome: "Cibo", cosa: "colazioni, pranzi e cene fuori" },
+    { nome: "Casa", cosa: "bollette e imprevisti vari" },
+    { nome: "Trasporti", cosa: "benzina, biglietti, viaggi, manutenzione auto" },
+    { nome: "Svago", cosa: "cinema, concerti, hobby, abbonamenti" },
+    { nome: "Cura", cosa: "farmacia, cosmetici, creme" },
+    { nome: "Vestiti", cosa: "shopping in generale" },
+    { nome: "Varie", cosa: "qualche extra che non sta altrove" }
+  ];
+
+  var VUOTO = { fisse: [], cuscinetto: 0, risparmiTotali: 0, cicli: [], spese: [], entrate: [], pacchetti: [] };
+
+  var d = null, vista = "home", avviso = null;
+  var tipo = "spesa", categoria = "Varie";
+  var pacchettoAperto = null, spesaAperta = null, dove = "risparmi";
+  var bozza = {};
+
+  // ---- utilità ----
+  function euro(n) {
+    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n || 0);
+  }
+  function secco(n) { return new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0 }).format(n || 0); }
+  function num(s) { var n = parseFloat(String(s == null ? "" : s).replace(",", ".")); return isNaN(n) ? 0 : n; }
+  function arr(n) { return Math.round(n * 100) / 100; }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function oggiISO() {
+    var x = new Date();
+    return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
+  }
+  function daISO(s) { var p = s.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function dataBreve(iso) { return daISO(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long" }); }
+  function giorniNelMese(a, m) { return new Date(a, m + 1, 0).getDate(); }
+  function prossimaAttesa(iso) {
+    var x = daISO(iso);
+    return new Date(x.getFullYear(), x.getMonth() + 1, Math.min(x.getDate(), giorniNelMese(x.getFullYear(), x.getMonth() + 1)));
+  }
+  function occorrenzaDi(g, iso) {
+    var i = daISO(iso);
+    var x = new Date(i.getFullYear(), i.getMonth(), Math.min(g, giorniNelMese(i.getFullYear(), i.getMonth())));
+    if (x < i) x = new Date(i.getFullYear(), i.getMonth() + 1, Math.min(g, giorniNelMese(i.getFullYear(), i.getMonth() + 1)));
+    return x;
+  }
+
+  // ---- dati ----
+  function carica() {
+    try {
+      var g = localStorage.getItem(CHIAVE);
+      d = g ? Object.assign({}, VUOTO, JSON.parse(g)) : Object.assign({}, VUOTO);
+    } catch (e) {
+      d = Object.assign({}, VUOTO);
+      avviso = "Non riesco a leggere i dati salvati.";
+    }
+  }
+  function salva() {
+    try {
+      localStorage.setItem(CHIAVE, JSON.stringify(d));
+      avviso = null;
+    } catch (e) {
+      avviso = "Non salvato. Copia il backup dalle impostazioni.";
+    }
+    render();
+  }
+
+  function attivo() { return d.cicli.length ? d.cicli[d.cicli.length - 1] : null; }
+
+  function conti() {
+    var a = attivo();
+    if (!a) return null;
+    var fisse = d.fisse.reduce(function (s, f) { return s + f.importo; }, 0);
+    var entrate = arr(d.entrate.filter(function (e) { return e.ciclo === a.id; }).reduce(function (s, x) { return s + x.importo; }, 0));
+    var spese = d.spese.filter(function (s) { return s.ciclo === a.id; });
+    var speso = arr(spese.reduce(function (s, x) { return s + x.importo; }, 0));
+    var budget = arr(a.stipendio + a.riporto + entrate - fisse - d.cuscinetto - a.risparmio);
+    var attesa = prossimaAttesa(a.id);
+    var durata = Math.max(1, Math.round((attesa - daISO(a.id)) / 86400000));
+    return {
+      fisse: fisse, entrate: entrate, speso: speso, budget: budget,
+      resta: arr(budget - speso), attesa: attesa, durata: durata,
+      trascorsi: Math.max(0, Math.round((new Date() - daISO(a.id)) / 86400000)),
+      giorni: Math.max(1, Math.ceil((attesa - new Date()) / 86400000)),
+      inTasca: arr(d.cuscinetto + arr(budget - speso)),
+      spese: spese,
+      entrateCiclo: d.entrate.filter(function (e) { return e.ciclo === a.id; }),
+      inArrivo: d.fisse.filter(function (f) { return f.giorno && occorrenzaDi(f.giorno, a.id) > new Date(); })
+        .sort(function (x, y) { return occorrenzaDi(x.giorno, a.id) - occorrenzaDi(y.giorno, a.id); })
+    };
+  }
+
+  function daRimettere() {
+    return arr((d.pacchetti || []).reduce(function (s, x) { return s + (x.sbloccato || 0); }, 0));
+  }
+
+  // ---- pezzi di markup ----
+  var ICONA = {
+    piu: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    chiudi: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+    ing: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 3.6 1.65 1.65 0 0010 2.09V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 8a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+    x: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+  };
+
+  function testata(t, azione) {
+    return '<div class="testata"><b>' + esc(t) + '</b><button class="tondo" data-a="' + azione + '">' + ICONA.chiudi + '</button></div>';
+  }
+  function riga(et, va, colore, forte, ultima) {
+    var st = colore ? ' style="color:' + colore + '"' : "";
+    return '<div class="riga' + (forte ? " forte" : "") + (ultima ? " ultima" : "") + '">' +
+      '<span class="et"' + st + '>' + esc(et) + '</span><span class="va"' + st + '>' + esc(va) + '</span></div>';
+  }
+  function cifraGrande(n, colore) {
+    var intero = secco(Math.floor(Math.abs(n)));
+    var cent = String(Math.round((Math.abs(n) % 1) * 100)).padStart(2, "0");
+    return '<p class="grande" style="color:' + colore + '">' + intero + '<span class="cent">,' + cent + ' €</span></p>';
+  }
+  function campoCifra(id, valore, ph) {
+    return '<div class="campo-cifra"><input class="cifra" id="' + id + '" inputmode="decimal" value="' +
+      esc(valore || "") + '" placeholder="' + (ph || "0,00") + '"><span>€</span></div>';
+  }
+
+  // ---- schermate ----
+  function vistaPrimoAvvio() {
+    return '<p class="titolo" style="margin-top:8px">Per cominciare</p>' +
+      '<p style="font-family:var(--serif);font-size:34px;letter-spacing:-.02em;line-height:1.15;margin:10px 0 18px 4px">Quanto è entrato?</p>' +
+      '<div class="gruppo largo">' + campoCifra("primo", bozza.primo) + '</div>' +
+      '<p class="piccola" style="margin:4px 4px 20px">Il mese parte da oggi e dura finché non registri la prossima entrata. Poi imposta le spese fisse dall\'ingranaggio.</p>' +
+      '<button class="pieno" data-a="apriPrimo">Comincia</button>';
+  }
+
+  function vistaHome() {
+    var a = attivo(), c = conti(), scoperto = c.resta < 0;
+    var pct = c.budget > 0 ? Math.min(100, (c.speso / c.budget) * 100) : 0;
+    var pctT = Math.min(100, (c.trascorsi / c.durata) * 100);
+    var h = '<div class="testata"><b>Budget</b><button class="tondo" data-a="vaiImpostazioni">' + ICONA.ing + '</button></div>';
+
+    h += '<div class="gruppo largo">' +
+      '<p class="titolo" style="margin-left:0">' + (scoperto ? "Sei oltre il budget di" : "Da spendere") + '</p>' +
+      cifraGrande(c.resta, scoperto ? "var(--rosso)" : "var(--testo)") +
+      '<p class="nota" style="margin-bottom:20px">' +
+        (c.giorni === 1 ? "fino a domani" : "fino al " + c.attesa.toLocaleDateString("it-IT", { day: "numeric", month: "long" })) +
+      '</p>' +
+      '<div class="barra"><div style="width:' + pct + '%;background:' + (scoperto ? "var(--rosso)" : "var(--verde)") + ';opacity:' + (scoperto ? .7 : .45) + '"></div></div>' +
+      '<div class="oggi"><i style="left:' + pctT + '%"></i><span style="left:' + pctT + '%">oggi</span></div>' +
+      '<p class="nota" style="font-size:12px;margin-top:8px">Speso ' + euro(c.speso) + ' su ' + euro(c.budget) + ' · giorno ' + c.trascorsi + ' di ' + c.durata + '</p>' +
+      '</div>';
+
+    h += '<div class="gruppo" style="background:var(--verde-chiaro);padding:20px">' +
+      '<p class="titolo" style="color:var(--verde);margin-left:0">Da parte questo mese</p>' +
+      '<input id="risparmio" inputmode="decimal" value="' + (a.risparmio || "") + '" placeholder="0" style="background:var(--carta);font-family:var(--serif);font-size:20px">' +
+      '<p style="font-size:12px;color:var(--verde);margin:10px 0 0;opacity:.85">In totale hai messo via ' + euro(d.risparmiTotali) + '</p>' +
+      '</div>';
+
+    var dr = daRimettere();
+    if (dr > 0) {
+      h += '<div class="gruppo" style="background:var(--giallo-chiaro);padding:20px">' +
+        '<p class="titolo" style="color:var(--giallo);margin-left:0">Da rimettere nei pacchetti</p>' +
+        '<p style="font-family:var(--serif);font-size:30px;letter-spacing:-.02em;line-height:1;margin:10px 0 8px;color:var(--giallo)">' + euro(dr) + '</p>' +
+        '<p style="font-size:12px;color:var(--giallo);margin:0;opacity:.85;line-height:1.5">Rimettili quando puoi, anche un po\' alla volta: ogni versamento scala da qui.</p>' +
+        '<button data-a="vaiPacchetti" style="margin-top:14px;width:100%;background:var(--carta);border:none;border-radius:10px;padding:13px 0;font-size:13px;color:var(--giallo)">Rimetti ora</button>' +
+        '</div>';
+    }
+
+    h += '<button class="link" data-a="vaiPacchetti"><span>I tuoi pacchetti</span><span style="color:var(--muto)">' +
+      euro((d.pacchetti || []).reduce(function (s, x) { return s + x.saldo; }, 0)) + '</span></button>';
+
+    h += '<p class="titolo">Come si compone</p><div class="gruppo">' +
+      riga("Entrato il " + dataBreve(a.id), euro(a.stipendio)) +
+      (a.riporto !== 0 ? riga("Rimasto dal mese scorso", "+ " + euro(a.riporto), "var(--giallo)") : "") +
+      (c.entrate > 0 ? riga("Entrate in più", "+ " + euro(c.entrate), "var(--verde)") : "") +
+      riga("Spese fisse", "− " + euro(c.fisse)) +
+      (d.cuscinetto > 0 ? riga("Da non toccare", "− " + euro(d.cuscinetto), "var(--giallo)") : "") +
+      riga("Da parte", "− " + euro(a.risparmio), "var(--verde)") +
+      riga("Già speso", "− " + euro(c.speso)) +
+      riga("Ti resta", euro(c.resta), scoperto ? "var(--rosso)" : null, true, true) +
+      '</div>';
+
+    if (c.inArrivo.length) {
+      h += '<p class="titolo">Fisse ancora da pagare</p><div class="gruppo">';
+      c.inArrivo.forEach(function (f, i) {
+        h += riga(f.nome, "il " + f.giorno + " · " + euro(f.importo), null, false, i === c.inArrivo.length - 1);
+      });
+      h += '</div><p class="piccola">Già tolte dal conto qui sopra: in banca le vedi ancora, ma non sono tue.</p>';
+    }
+
+    h += '<button class="vuoto" style="width:100%;color:var(--muto);padding:16px 0" data-a="vaiNuovoMese">È arrivato lo stipendio</button>';
+
+    h += '<div class="fondo-fisso"><div class="due">' +
+      '<button class="pieno" data-a="vaiAggiungi">' + ICONA.piu + ' Ho speso</button>' +
+      '<button class="vuoto" data-a="vaiElenco">Elenco</button>' +
+      '</div></div>';
+    return h;
+  }
+
+  function vistaAggiungi() {
+    var c = conti(), n = num(bozza.importo);
+    var dopo = tipo === "spesa" ? c.resta - n : c.resta + n;
+    var h = '<div class="testata"><div style="display:flex;gap:6px">' +
+      '<button class="pillola' + (tipo === "spesa" ? " on" : "") + '" data-a="tipoSpesa">Ho speso</button>' +
+      '<button class="pillola' + (tipo === "entrata" ? " on" : "") + '" data-a="tipoEntrata">È entrato</button>' +
+      '</div><button class="tondo" data-a="vaiHome">' + ICONA.chiudi + '</button></div>';
+
+    h += '<div class="gruppo largo">' + campoCifra("imp", bozza.importo) +
+      '<input id="nota" value="' + esc(bozza.nota || "") + '" placeholder="' +
+      (tipo === "spesa" ? "Per cosa (facoltativo)" : "Da cosa (facoltativo)") + '" style="margin-top:16px"></div>';
+
+    if (tipo === "spesa") {
+      h += '<div class="pillole">';
+      CATEGORIE.forEach(function (x) {
+        h += '<button class="pillola' + (categoria === x.nome ? " on" : "") + '" data-a="cat" data-v="' + x.nome + '">' + x.nome + '</button>';
+      });
+      h += '</div><p class="piccola" style="margin:0 4px 12px">' +
+        esc((CATEGORIE.filter(function (x) { return x.nome === categoria; })[0] || {}).cosa) + '</p>';
+    }
+
+    if (n > 0) h += '<p class="nota" style="margin:0 4px 12px">Ti resteranno ' + euro(dopo) + '</p>';
+    h += '<div class="fondo-fisso"><div><button class="pieno" data-a="registra">Salva</button></div></div>';
+    return h;
+  }
+
+  function vistaElenco() {
+    var a = attivo(), c = conti();
+    var h = testata("Dal " + dataBreve(a.id), "vaiHome");
+
+    var somme = {};
+    c.spese.forEach(function (s) {
+      var k = s.categoria || "Senza categoria";
+      somme[k] = arr((somme[k] || 0) + s.importo);
+    });
+    var perCat = Object.keys(somme).map(function (k) { return [k, somme[k]]; }).sort(function (x, y) { return y[1] - x[1]; });
+
+    h += '<p class="titolo">Spese</p><div class="gruppo">';
+    if (!c.spese.length) h += '<p class="vuota">Ancora niente</p>';
+    c.spese.slice().reverse().forEach(function (s, i, tutte) {
+      var ultima = i === tutte.length - 1;
+      h += '<div style="border-bottom:' + (ultima ? "none" : "1px solid var(--fondo)") + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:14px">' +
+        '<span data-a="apriSpesa" data-v="' + s.id + '" style="flex:1;color:' + (s.nota ? "var(--testo)" : "var(--muto)") + '">' +
+        esc(s.nota || "Senza nota") +
+        '<span style="color:var(--muto);font-size:12px;margin-left:8px">' + esc(s.categoria || "senza categoria") + '</span></span>' +
+        '<span class="destra"><span>' + euro(s.importo) + '</span>' +
+        '<button class="x" data-a="elimSpesa" data-v="' + s.id + '">' + ICONA.x + '</button></span></div>';
+      if (spesaAperta === s.id) {
+        h += '<div class="pillole" style="padding-bottom:14px;margin-bottom:0">';
+        CATEGORIE.forEach(function (x) {
+          h += '<button class="pillola' + (s.categoria === x.nome ? " on" : "") + '" style="background:' +
+            (s.categoria === x.nome ? "var(--scuro)" : "var(--fondo)") + '" data-a="setCat" data-v="' + s.id + '" data-c="' + x.nome + '">' + x.nome + '</button>';
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div><p class="piccola">In tutto ' + euro(c.speso) + ' su ' + euro(c.budget) + '</p>';
+
+    if (perCat.length) {
+      h += '<p class="titolo">Dove sono finiti</p><div class="gruppo" style="padding:18px">';
+      perCat.forEach(function (p, i) {
+        h += '<div style="margin-bottom:' + (i === perCat.length - 1 ? 0 : 14) + 'px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>' + esc(p[0]) + '</span>' +
+          '<span style="color:var(--muto)">' + euro(p[1]) + '</span></div>' +
+          '<div class="barra" style="height:6px"><div style="width:' + ((p[1] / perCat[0][1]) * 100) + '%;background:var(--verde);opacity:.4"></div></div></div>';
+      });
+      h += '</div>';
+    }
+
+    if (c.entrateCiclo.length) {
+      h += '<p class="titolo">Entrate in più</p><div class="gruppo">';
+      c.entrateCiclo.slice().reverse().forEach(function (e, i, tutte) {
+        h += '<div class="riga' + (i === tutte.length - 1 ? " ultima" : "") + '">' +
+          '<span>' + esc(e.nota || "Senza nota") + '</span>' +
+          '<span class="destra"><span style="color:var(--verde)">+ ' + euro(e.importo) + '</span>' +
+          '<button class="x" data-a="elimEntrata" data-v="' + e.id + '">' + ICONA.x + '</button></span></div>';
+      });
+      h += '</div>';
+    }
+
+    var chiusi = d.cicli.filter(function (x) { return x.chiuso; }).reverse();
+    if (chiusi.length) {
+      h += '<p class="titolo">Mesi chiusi</p><div class="gruppo">';
+      chiusi.forEach(function (x, i) {
+        h += riga(dataBreve(x.id) + " → " + dataBreve(x.fine), euro(x.inTasca),
+          x.inTasca >= d.cuscinetto ? "var(--verde)" : "var(--rosso)", false, i === chiusi.length - 1);
+      });
+      h += '</div><p class="piccola">Quanto ti è rimasto alla fine di ogni mese.</p>';
+    }
+    return h;
+  }
+
+  function vistaPacchetti() {
+    var p = d.pacchetti || [];
+    var totale = arr(p.reduce(function (s, x) { return s + x.saldo; }, 0));
+    var h = testata("Da parte", "vaiHome");
+
+    h += '<div class="gruppo largo"><p class="titolo" style="margin-left:0">In tutto</p>' +
+      '<p style="font-family:var(--serif);font-size:44px;letter-spacing:-.03em;line-height:1;margin:12px 0 8px;color:var(--verde)">' + euro(totale) + '</p>' +
+      (daRimettere() > 0 ? '<p style="font-size:13px;color:var(--giallo);margin:0">' + euro(daRimettere()) + ' sbloccati, da rimettere</p>' : '') +
+      '</div>';
+
+    h += '<p class="titolo">Pacchetti</p><div class="gruppo">';
+    if (!p.length) h += '<p class="vuota">Nessun pacchetto ancora</p>';
+    p.forEach(function (x, i) {
+      h += '<div style="border-bottom:' + (i === p.length - 1 ? "none" : "1px solid var(--fondo)") + '">' +
+        '<div data-a="apriPacchetto" data-v="' + x.id + '" style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;font-size:14px">' +
+        '<span>' + esc(x.nome) + (x.sbloccato > 0 ? '<span style="color:var(--giallo);font-size:12px;margin-left:8px">− ' + euro(x.sbloccato) + '</span>' : '') + '</span>' +
+        '<span>' + euro(x.saldo) + '</span></div>';
+      if (pacchettoAperto === x.id) {
+        h += '<div style="padding-bottom:16px">' +
+          '<div style="background:var(--fondo);border-radius:10px;padding:12px 14px;margin-bottom:8px">' +
+          '<div class="campo-cifra"><input class="cifra" id="mov" inputmode="decimal" style="font-size:26px" value="' + esc(bozza.mov || "") + '" placeholder="0,00"><span style="font-size:16px">€</span></div></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px">' +
+          '<button class="pieno" style="border-radius:12px;padding:13px 0;background:var(--giallo-chiaro);color:var(--giallo)" data-a="sblocca" data-v="' + x.id + '">Sblocco</button>' +
+          '<button class="pieno" style="border-radius:12px;padding:13px 0;background:var(--verde-chiaro);color:var(--verde)" data-a="rimetti" data-v="' + x.id + '">Rimetto</button>' +
+          '<button class="pieno" style="border-radius:12px;padding:0 14px;background:var(--carta);color:var(--bordo)" data-a="elimPacchetto" data-v="' + x.id + '">' + ICONA.x + '</button>' +
+          '</div>' +
+          (x.sbloccato > 0 ? '<p class="piccola" style="margin:10px 0 0">Hai sbloccato ' + euro(x.sbloccato) + ': quando li rimetti, questa voce si azzera da sola.</p>' : '') +
+          '</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+
+    h += '<div style="display:grid;grid-template-columns:1fr 100px auto;gap:6px;margin-bottom:8px">' +
+      '<input id="pacNome" value="' + esc(bozza.pacNome || "") + '" placeholder="Nome del pacchetto" style="background:var(--carta);border-radius:12px">' +
+      '<input id="pacSaldo" inputmode="decimal" value="' + esc(bozza.pacSaldo || "") + '" placeholder="quanto c\'è" style="background:var(--carta);border-radius:12px">' +
+      '<button class="pieno" style="border-radius:12px;padding:0 16px;width:auto" data-a="nuovoPacchetto">' + ICONA.piu + '</button></div>' +
+      '<p class="piccola" style="margin:0 4px">Ricopia qui i pacchetti che hai già, con quello che c\'è dentro adesso. Tocca un pacchetto per sbloccare o rimettere: i movimenti finiscono anche nel budget del mese.</p>';
+    return h;
+  }
+
+  function vistaNuovoMese() {
+    var a = attivo(), c = conti();
+    var inTasca = c.inTasca;
+    var riporto = Math.min(inTasca, d.cuscinetto);
+    var ecc = arr(inTasca - riporto);
+    var h = testata("È arrivato lo stipendio", "vaiHome");
+
+    h += '<div class="gruppo largo"><p class="titolo" style="margin-left:0">Dal ' + dataBreve(a.id) + ' a oggi</p>' +
+      '<p style="font-family:var(--serif);font-size:44px;letter-spacing:-.03em;line-height:1;margin:12px 0 8px;color:' +
+      (inTasca < d.cuscinetto ? "var(--rosso)" : "var(--verde)") + '">' + euro(inTasca) + '</p>' +
+      '<p class="nota">' + (inTasca >= d.cuscinetto
+        ? "ti sono rimasti. Ne volevi " + euro(d.cuscinetto) + "."
+        : "ti sono rimasti, meno dei " + euro(d.cuscinetto) + " che volevi.") + '</p></div>';
+
+    if (d.cuscinetto > 0) h += '<div class="gruppo">' + riga("Rientrano nel mese nuovo", euro(riporto), "var(--giallo)", false, true) + '</div>';
+
+    if (ecc > 0) {
+      h += '<p class="titolo">' + euro(ecc) + ' oltre la soglia</p>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">' +
+        '<button class="pillola' + (dove === "risparmi" ? " on" : "") + '" style="padding:16px 8px;border-radius:14px" data-a="dove" data-v="risparmi">Nei risparmi</button>' +
+        '<button class="pillola' + (dove === "mese" ? " on" : "") + '" style="padding:16px 8px;border-radius:14px" data-a="dove" data-v="mese">Nel mese nuovo</button></div>';
+    }
+
+    h += '<p class="titolo">Quanto è entrato oggi</p><div class="gruppo largo">' + campoCifra("nuovoStip", bozza.nuovoStip) + '</div>';
+    h += '<div class="fondo-fisso"><div><button class="pieno" data-a="chiudiMese">Chiudi e comincia il mese nuovo</button></div></div>';
+    return h;
+  }
+
+  function vistaImpostazioni() {
+    var a = attivo();
+    var h = testata("Impostazioni", "vaiHome");
+
+    h += '<p class="titolo">Con quanto vuoi arrivare a fine mese</p><div class="gruppo medio">' +
+      '<input id="cusc" inputmode="decimal" value="' + (d.cuscinetto || "") + '" placeholder="0" style="font-family:var(--serif);font-size:18px"></div>' +
+      '<p class="piccola">Non entra in quello che puoi spendere. Se il mese fila liscio te lo ritrovi intero e rientra nel mese dopo.</p>';
+
+    h += '<p class="titolo">Stipendio di questo mese</p><div class="gruppo medio">' +
+      '<input id="stip" inputmode="decimal" value="' + (a.stipendio || "") + '" style="font-family:var(--serif);font-size:18px"></div>';
+
+    h += '<p class="titolo">Spese fisse</p><div class="gruppo">';
+    if (!d.fisse.length) h += '<p class="vuota">Nessuna ancora</p>';
+    d.fisse.forEach(function (f, i) {
+      h += '<div class="riga' + (i === d.fisse.length - 1 ? " ultima" : "") + '">' +
+        '<span>' + esc(f.nome) + (f.giorno ? '<span style="color:var(--muto);font-size:12px;margin-left:6px">il ' + f.giorno + '</span>' : '') + '</span>' +
+        '<span class="destra"><span style="color:var(--muto)">' + euro(f.importo) + '</span>' +
+        '<button class="x" data-a="elimFissa" data-v="' + f.id + '">' + ICONA.x + '</button></span></div>';
+    });
+    h += '</div>';
+
+    h += '<div style="display:grid;grid-template-columns:1fr 78px 68px auto;gap:6px;margin-bottom:8px">' +
+      '<input id="fNome" value="' + esc(bozza.fNome || "") + '" placeholder="Affitto" style="background:var(--carta);border-radius:12px">' +
+      '<input id="fImp" inputmode="decimal" value="' + esc(bozza.fImp || "") + '" placeholder="€" style="background:var(--carta);border-radius:12px">' +
+      '<input id="fGio" inputmode="numeric" value="' + esc(bozza.fGio || "") + '" placeholder="gg" style="background:var(--carta);border-radius:12px">' +
+      '<button class="pieno" style="border-radius:12px;padding:0 16px;width:auto" data-a="nuovaFissa">' + ICONA.piu + '</button></div>' +
+      '<p class="piccola" style="margin:0 4px 20px">In tutto ' + euro(d.fisse.reduce(function (s, f) { return s + f.importo; }, 0)) +
+      '. Il giorno è facoltativo e serve a ricordarti cosa deve ancora uscire.</p>';
+
+    h += '<p class="titolo">Copia di sicurezza</p><div class="gruppo medio">' +
+      '<textarea id="backup" readonly style="height:80px;font-family:monospace;color:var(--muto)">' + esc(JSON.stringify(d)) + '</textarea></div>' +
+      '<p class="piccola">Tocca per selezionare e copiare. I dati stanno solo su questo dispositivo.</p>';
+
+    h += '<p class="titolo">Ripristina da una copia</p><div class="gruppo medio">' +
+      '<textarea id="ripristino" style="height:70px;font-family:var(--sans)" placeholder="Incolla qui la copia fatta sull\'altro dispositivo">' + esc(bozza.ripristino || "") + '</textarea></div>';
+    if ((bozza.ripristino || "").trim()) {
+      h += '<button class="pieno" style="background:' + (bozza.conferma ? "var(--rosso)" : "var(--scuro)") + '" data-a="ripristina">' +
+        (bozza.conferma ? "Confermi? Sostituisce tutto" : "Ripristina") + '</button>';
+    }
+    return h;
+  }
+
+  // ---- render ----
+  function render() {
+    var app = document.getElementById("app");
+    var attivoEl = document.activeElement;
+    var idFocus = attivoEl && attivoEl.id ? attivoEl.id : null;
+    var pos = idFocus && attivoEl.selectionStart != null ? attivoEl.selectionStart : null;
+
+    var corpo;
+    if (!attivo()) { corpo = vistaPrimoAvvio(); vista = "home"; }
+    else if (vista === "aggiungi") corpo = vistaAggiungi();
+    else if (vista === "elenco") corpo = vistaElenco();
+    else if (vista === "pacchetti") corpo = vistaPacchetti();
+    else if (vista === "nuovoMese") corpo = vistaNuovoMese();
+    else if (vista === "impostazioni") corpo = vistaImpostazioni();
+    else corpo = vistaHome();
+
+    app.className = (vista === "home" || vista === "aggiungi" || vista === "nuovoMese") ? "con-barra" : "";
+    app.innerHTML = (avviso ? '<div class="avviso">' + esc(avviso) + '</div>' : "") + corpo;
+
+    if (idFocus) {
+      var el = document.getElementById(idFocus);
+      if (el) { el.focus(); if (pos != null && el.setSelectionRange) try { el.setSelectionRange(pos, pos); } catch (e) {} }
+    }
+  }
+
+  // ---- azioni ----
+  function leggi(id) { var el = document.getElementById(id); return el ? el.value : ""; }
+
+  var azioni = {
+    vaiHome: function () { vista = "home"; spesaAperta = null; pacchettoAperto = null; render(); },
+    vaiAggiungi: function () { vista = "aggiungi"; bozza.importo = ""; bozza.nota = ""; categoria = "Varie"; render(); },
+    vaiElenco: function () { vista = "elenco"; render(); },
+    vaiPacchetti: function () { vista = "pacchetti"; render(); },
+    vaiNuovoMese: function () { vista = "nuovoMese"; bozza.nuovoStip = ""; render(); },
+    vaiImpostazioni: function () { vista = "impostazioni"; render(); },
+    tipoSpesa: function () { tipo = "spesa"; render(); },
+    tipoEntrata: function () { tipo = "entrata"; render(); },
+    cat: function (v) { categoria = v; render(); },
+    dove: function (v) { dove = v; render(); },
+
+    apriPrimo: function () {
+      var s = num(leggi("primo"));
+      if (s <= 0) return;
+      d.cicli = [{ id: oggiISO(), stipendio: arr(s), riporto: 0, risparmio: 0, chiuso: false }];
+      bozza.primo = ""; salva();
+    },
+
+    registra: function () {
+      var n = num(leggi("imp"));
+      if (n <= 0) return;
+      var a = attivo();
+      var voce = { id: Date.now(), importo: arr(n), nota: leggi("nota").trim(), ciclo: a.id };
+      if (tipo === "spesa") { voce.categoria = categoria; d.spese.push(voce); }
+      else d.entrate.push(voce);
+      bozza.importo = ""; bozza.nota = ""; categoria = "Varie"; vista = "home"; salva();
+    },
+
+    elimSpesa: function (v) { d.spese = d.spese.filter(function (x) { return String(x.id) !== v; }); salva(); },
+    elimEntrata: function (v) { d.entrate = d.entrate.filter(function (x) { return String(x.id) !== v; }); salva(); },
+    elimFissa: function (v) { d.fisse = d.fisse.filter(function (x) { return String(x.id) !== v; }); salva(); },
+    apriSpesa: function (v) { spesaAperta = spesaAperta === Number(v) ? null : Number(v); render(); },
+    setCat: function (v, c) {
+      d.spese = d.spese.map(function (x) { return String(x.id) === v ? Object.assign({}, x, { categoria: c }) : x; });
+      spesaAperta = null; salva();
+    },
+
+    nuovaFissa: function () {
+      var nome = leggi("fNome").trim(), imp = num(leggi("fImp")), g = parseInt(leggi("fGio"), 10);
+      if (!nome || imp <= 0) return;
+      d.fisse.push({ id: Date.now(), nome: nome, importo: arr(imp), giorno: g >= 1 && g <= 31 ? g : null });
+      bozza.fNome = ""; bozza.fImp = ""; bozza.fGio = ""; salva();
+    },
+
+    apriPacchetto: function (v) { pacchettoAperto = pacchettoAperto === Number(v) ? null : Number(v); bozza.mov = ""; render(); },
+    nuovoPacchetto: function () {
+      var nome = leggi("pacNome").trim();
+      if (!nome) return;
+      d.pacchetti = (d.pacchetti || []).concat([{ id: Date.now(), nome: nome, saldo: arr(num(leggi("pacSaldo"))), sbloccato: 0 }]);
+      bozza.pacNome = ""; bozza.pacSaldo = ""; salva();
+    },
+    elimPacchetto: function (v) {
+      d.pacchetti = (d.pacchetti || []).filter(function (x) { return String(x.id) !== v; });
+      pacchettoAperto = null; salva();
+    },
+    sblocca: function (v) { muovi(v, "sblocca"); },
+    rimetti: function (v) { muovi(v, "rimetti"); },
+
+    chiudiMese: function () {
+      var s = num(leggi("nuovoStip"));
+      if (s <= 0) return;
+      var a = attivo(), c = conti();
+      var inTasca = c.inTasca;
+      var riporto = Math.min(inTasca, d.cuscinetto);
+      var ecc = arr(inTasca - riporto);
+      d.risparmiTotali = arr(d.risparmiTotali + a.risparmio + (dove === "risparmi" ? ecc : 0));
+      d.cicli = d.cicli.map(function (x) {
+        return x.id === a.id ? Object.assign({}, x, { chiuso: true, fine: oggiISO(), inTasca: inTasca, riporto: riporto, eccedenza: ecc, dove: dove }) : x;
+      });
+      d.cicli.push({
+        id: oggiISO(), stipendio: arr(s),
+        riporto: arr(riporto + (dove === "mese" ? ecc : 0)),
+        risparmio: 0, chiuso: false
+      });
+      bozza.nuovoStip = ""; dove = "risparmi"; vista = "home"; salva();
+    },
+
+    ripristina: function () {
+      var testo = leggi("ripristino");
+      var letto;
+      try { letto = JSON.parse(testo); } catch (e) { avviso = "Il testo incollato non è una copia valida."; return render(); }
+      if (!letto || !Array.isArray(letto.cicli)) { avviso = "Il testo incollato non è una copia valida."; return render(); }
+      if (!bozza.conferma) { bozza.conferma = true; return render(); }
+      d = Object.assign({}, VUOTO, letto);
+      bozza.ripristino = ""; bozza.conferma = false; vista = "home"; salva();
+    }
+  };
+
+  function muovi(idPacchetto, verso) {
+    var n = num(leggi("mov"));
+    if (n <= 0) return;
+    var a = attivo();
+    var pac = (d.pacchetti || []).filter(function (x) { return String(x.id) === idPacchetto; })[0];
+    if (!pac) return;
+    d.pacchetti = d.pacchetti.map(function (x) {
+      if (String(x.id) !== idPacchetto) return x;
+      if (verso === "sblocca") return Object.assign({}, x, { saldo: arr(x.saldo - n), sbloccato: arr((x.sbloccato || 0) + n) });
+      var copre = Math.min(n, x.sbloccato || 0);
+      return Object.assign({}, x, { saldo: arr(x.saldo + n), sbloccato: arr((x.sbloccato || 0) - copre) });
+    });
+    // i soldi si muovono davvero sul conto: il budget del mese deve vederli
+    var voce = {
+      id: Date.now(), importo: arr(n),
+      nota: (verso === "sblocca" ? "Sbloccato da " : "Rimesso in ") + pac.nome,
+      ciclo: a.id, categoria: verso === "sblocca" ? null : "Varie"
+    };
+    if (verso === "sblocca") d.entrate.push(voce); else d.spese.push(voce);
+    bozza.mov = ""; salva();
+  }
+
+  // ---- eventi ----
+  document.addEventListener("click", function (ev) {
+    var el = ev.target.closest("[data-a]");
+    if (!el) return;
+    var a = el.getAttribute("data-a");
+    if (azioni[a]) azioni[a](el.getAttribute("data-v"), el.getAttribute("data-c"));
+  });
+
+  document.addEventListener("input", function (ev) {
+    var id = ev.target.id;
+    if (!id) return;
+    if (id === "risparmio") {
+      var a = attivo();
+      d.cicli = d.cicli.map(function (x) { return x.id === a.id ? Object.assign({}, x, { risparmio: arr(num(ev.target.value)) }) : x; });
+      scriviSoltanto();
+    } else if (id === "cusc") { d.cuscinetto = num(ev.target.value); scriviSoltanto(); }
+    else if (id === "stip") {
+      var b = attivo();
+      d.cicli = d.cicli.map(function (x) { return x.id === b.id ? Object.assign({}, x, { stipendio: num(ev.target.value) }) : x; });
+      scriviSoltanto();
+    }
+    else if (id === "imp") { bozza.importo = ev.target.value; render(); }
+    else if (id === "nota") bozza.nota = ev.target.value;
+    else if (id === "primo") bozza.primo = ev.target.value;
+    else if (id === "nuovoStip") bozza.nuovoStip = ev.target.value;
+    else if (id === "mov") bozza.mov = ev.target.value;
+    else if (id === "fNome") bozza.fNome = ev.target.value;
+    else if (id === "fImp") bozza.fImp = ev.target.value;
+    else if (id === "fGio") bozza.fGio = ev.target.value.replace(/[^0-9]/g, "").slice(0, 2);
+    else if (id === "pacNome") bozza.pacNome = ev.target.value;
+    else if (id === "pacSaldo") bozza.pacSaldo = ev.target.value;
+    else if (id === "ripristino") { bozza.ripristino = ev.target.value; bozza.conferma = false; }
+  });
+
+  // scrive senza ridisegnare: evita che la tastiera si chiuda mentre digiti
+  var attesa = null;
+  function scriviSoltanto() {
+    clearTimeout(attesa);
+    attesa = setTimeout(function () {
+      try { localStorage.setItem(CHIAVE, JSON.stringify(d)); } catch (e) {}
+    }, 300);
+  }
+
+  document.addEventListener("focusout", function (ev) {
+    if (["risparmio", "cusc", "stip"].indexOf(ev.target.id) !== -1) render();
+  });
+
+  document.addEventListener("focusin", function (ev) {
+    if (ev.target.id === "backup") ev.target.select();
+  });
+
+  carica();
+  render();
+})();
+</script>
+</body>
+</html>
