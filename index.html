@@ -8,116 +8,388 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Budget">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#FBFBFA">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23111111'/%3E%3Crect x='42' y='78' width='96' height='24' rx='12' fill='%233A3A3A'/%3E%3Crect x='42' y='78' width='60' height='24' rx='12' fill='%23EDF3EC'/%3E%3C/svg%3E">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111111'/%3E%3Crect x='7' y='14' width='18' height='5' rx='2.5' fill='%233A3A3A'/%3E%3Crect x='7' y='14' width='11' height='5' rx='2.5' fill='%23EDF3EC'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#F3F5F8">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23F3F5F8'/%3E%3Crect x='30' y='30' width='120' height='120' fill='none' stroke='%2314181E' stroke-width='3'/%3E%3Crect x='30' y='96' width='120' height='54' fill='%23F07020'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F3F5F8'/%3E%3Crect x='5' y='5' width='22' height='22' fill='none' stroke='%2314181E' stroke-width='2'/%3E%3Crect x='5' y='18' width='22' height='9' fill='%23F07020'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
-    --fondo: #FBFBFA; --carta: #FFFFFF; --bordo: #EAEAEA;
-    --testo: #2F3437; --muto: #787774; --scuro: #111111;
-    --verde: #346538; --verde-chiaro: #EDF3EC;
-    --giallo: #956400; --giallo-chiaro: #FBF3DB;
-    --rosso: #9F2F2D; --rosso-chiaro: #FDEBEC;
-    --sans: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --fondo: #F5F6F8; --carta: #FFFFFF;
+    --bordo: #E1E5EB; --bordo-forte: #B8C0CC;
+    --testo: #17202B; --testo-2: #586272; --muto: #7B8494;
+    --scuro: #17202B;
+    --arancio: #F07020; --arancio-ink: #B94A0A; --arancio-soft: #FFF0E6;
+    --verde: #18745B; --verde-chiaro: #EAF5F0;
+    --giallo: #B95A18; --giallo-chiaro: #FFF4E8;
+    --rosso: #A3231B; --rosso-chiaro: #FAE4E1;
+    --sans: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --serif: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --r: 6px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
-    margin: 0; padding: 0; background: var(--fondo); color: var(--testo);
+    margin: 0; padding: 0; color: var(--testo);
     font-family: var(--sans); -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    background-color: var(--fondo);
+    background-image: none;
   }
   #app {
     max-width: 440px; margin: 0 auto;
     padding: calc(22px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
   }
-  #app.con-barra { padding-bottom: calc(128px + env(safe-area-inset-bottom)); }
+  #app.con-barra { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  #app.con-azione { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+
+  /* navigazione: una riga di riquadri, come le caselle di un cartiglio */
+  .nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--carta); border-top: 1px solid var(--bordo);
+    padding-bottom: env(safe-area-inset-bottom);
+    display: flex; justify-content: center;
+  }
+  .nav-in {
+    width: 100%; max-width: 440px;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+  }
+  .tab {
+    background: none; border: none; padding: 10px 0 9px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    color: var(--muto); position: relative;
+  }
+  .tab span {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .07em;
+    text-transform: uppercase; line-height: 1;
+  }
+  .tab.on { color: var(--testo); }
+  .tab.on::before {
+    content: ""; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 2px; background: var(--arancio);
+  }
+  .tab.azione { color: var(--testo); }
+  .tab.azione i {
+    width: 34px; height: 34px; background: var(--scuro); color: #fff;
+    display: flex; align-items: center; justify-content: center; border-radius: var(--r);
+  }
+  .pallino {
+    position: absolute; top: 8px; right: 50%; margin-right: -14px;
+    width: 6px; height: 6px; background: var(--arancio); border-radius: 50%;
+  }
 
   .testata { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-  .testata b { font-size: 15px; font-weight: 500; }
+  .testata b {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    letter-spacing: .1em; text-transform: uppercase;
+  }
   .tondo {
-    background: var(--carta); border: none; border-radius: 999px; width: 36px; height: 36px;
-    color: var(--muto); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--r);
+    width: 38px; height: 38px; color: var(--testo-2);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
-  .gruppo { background: var(--carta); border-radius: 16px; padding: 4px 16px; margin-bottom: 12px; }
-  .gruppo.largo { padding: 22px; }
-  .gruppo.medio { padding: 16px; }
+  /* i blocchi sono fogli da tavolo tecnico: bordo netto, angoli quasi vivi */
+  .gruppo {
+    background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--r);
+    padding: 2px 16px; margin-bottom: 12px;
+  }
+  .gruppo.largo { padding: 20px; }
+  .gruppo.medio { padding: 14px; }
   .titolo {
-    font-size: 11px; color: var(--muto); margin: 0 0 8px 4px;
-    letter-spacing: 0.06em; text-transform: uppercase;
+    font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--muto);
+    margin: 0 0 8px 2px; letter-spacing: .1em; text-transform: uppercase;
   }
+  /* cartiglio: etichetta tecnica a sinistra, valore in evidenza a destra */
   .riga {
-    display: flex; justify-content: space-between; align-items: baseline;
-    padding: 12px 0; border-bottom: 1px solid var(--fondo); font-size: 14px;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--bordo); font-size: 14px;
   }
   .riga:last-child, .riga.ultima { border-bottom: none; }
-  .riga .et { color: var(--muto); }
-  .riga.forte .va { font-weight: 500; }
-  .grande {
-    font-family: var(--serif); font-size: 52px; letter-spacing: -0.03em;
-    line-height: 1; margin: 12px 0 6px;
+  .riga .et {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muto);
   }
-  .grande .cent { font-size: 22px; color: var(--muto); }
-  .nota { font-size: 13px; color: var(--muto); margin: 0; }
-  .piccola { font-size: 12px; color: var(--muto); margin: -4px 4px 20px; line-height: 1.5; }
+  .riga .va { font-variant-numeric: tabular-nums; }
+  .riga.forte .va { font-weight: 600; }
+  .grande {
+    font-family: var(--sans); font-size: 54px; font-weight: 800;
+    letter-spacing: -.035em; line-height: .95; margin: 10px 0 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .grande .cent { font-size: 20px; font-weight: 500; color: var(--arancio); letter-spacing: -.01em; }
+  .nota { font-size: 13px; color: var(--testo-2); margin: 0; }
+  .piccola { font-size: 12px; color: var(--muto); margin: -4px 2px 20px; line-height: 1.5; }
 
-  .barra { height: 10px; border-radius: 5px; background: var(--fondo); overflow: hidden; }
-  .barra > div { height: 100%; border-radius: 5px; transition: width .4s ease; }
-  .oggi { position: relative; height: 16px; margin-top: 3px; }
-  .oggi i { position: absolute; width: 1px; height: 5px; background: var(--muto); }
-  .oggi span { position: absolute; top: 5px; transform: translateX(-50%); font-size: 10px; color: var(--muto); }
+  /* barra come linea di quota */
+  .barra {
+    height: 10px; border-radius: 0; background: var(--fondo);
+    border: 1px solid var(--bordo); overflow: hidden;
+  }
+  .barra > div { height: 100%; border-radius: 0; transition: width .4s var(--ease, cubic-bezier(.22,.61,.36,1)); }
+  .oggi { position: relative; height: 16px; margin-top: 2px; }
+  .oggi i { position: absolute; width: 1px; height: 6px; background: var(--bordo-forte); }
+  .oggi span {
+    position: absolute; top: 6px; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muto);
+  }
 
   button { font-family: var(--sans); cursor: pointer; }
   .pieno {
-    background: var(--scuro); color: #fff; border: none; border-radius: 14px;
-    padding: 16px 0; font-size: 14px; width: 100%;
+    background: var(--scuro); color: #fff; border: 1px solid var(--scuro); border-radius: var(--r);
+    padding: 15px 0; font-size: 14px; font-weight: 500; width: 100%;
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .vuoto {
-    background: var(--carta); color: var(--testo); border: none; border-radius: 14px;
-    padding: 16px 22px; font-size: 14px;
+    background: var(--carta); color: var(--testo); border: 1px solid var(--bordo-forte);
+    border-radius: var(--r); padding: 15px 20px; font-size: 14px; font-weight: 500;
   }
   .pillola {
-    padding: 10px 15px; border-radius: 999px; font-size: 13px;
-    background: var(--carta); color: var(--muto); border: none;
+    padding: 9px 14px; border-radius: var(--r); font-size: 13px;
+    background: var(--carta); color: var(--testo-2); border: 1px solid var(--bordo);
   }
-  .pillola.on { background: var(--scuro); color: #fff; }
+  .pillola.on { background: var(--scuro); color: #fff; border-color: var(--scuro); }
   .pillole { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
   input, textarea {
     font-family: var(--sans); font-size: 16px; color: var(--testo);
-    background: var(--fondo); border: none; border-radius: 10px;
-    padding: 14px 12px; width: 100%; outline: none;
+    background: var(--fondo); border: 1px solid var(--bordo); border-radius: var(--r);
+    padding: 13px 12px; width: 100%; outline: none;
   }
+  input:focus, textarea:focus { border-color: var(--arancio); }
   input.cifra {
-    font-family: var(--serif); font-size: 44px; letter-spacing: -0.03em;
-    background: transparent; padding: 0; border-radius: 0;
+    font-family: var(--sans); font-size: 44px; font-weight: 800; letter-spacing: -.035em;
+    background: transparent; border: none; padding: 0; border-radius: 0;
+    font-variant-numeric: tabular-nums;
   }
+  input.cifra:focus { border: none; }
   textarea { resize: none; font-size: 12px; }
-  .campo-cifra { display: flex; align-items: baseline; gap: 6px; }
-  .campo-cifra span { font-size: 22px; color: var(--muto); }
+  .campo-cifra { display: flex; align-items: baseline; gap: 6px; border-bottom: 1px solid var(--testo); padding-bottom: 8px; }
+  .campo-cifra span { font-size: 20px; font-weight: 500; color: var(--arancio); }
 
   .fondo-fisso {
     position: fixed; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(to top, var(--fondo) 62%, transparent);
+    background: linear-gradient(to top, var(--fondo) 62%, rgba(243,245,248,0));
     padding: 30px 18px calc(18px + env(safe-area-inset-bottom));
     display: flex; justify-content: center; pointer-events: none;
   }
   .fondo-fisso > div { width: 100%; max-width: 440px; pointer-events: auto; }
   .due { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .conti-home { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+  .conto-card { background:var(--carta); border:1px solid var(--bordo); border-radius:var(--r); padding:14px; min-width:0; }
+  .conto-card .conto-nome { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; margin-bottom:13px; }
+  .conto-card .conto-saldo { font-size:18px; font-weight:800; letter-spacing:-.03em; overflow-wrap:anywhere; margin-bottom:6px; }
+  .conto-card .conto-stato { color:var(--muto); font-size:11px; line-height:1.4; min-height:30px; }
+  .conto-card button { margin-top:12px; width:100%; padding:10px 6px; border:1px solid var(--bordo); border-radius:var(--r); background:var(--fondo); color:var(--testo); font-size:12px; }
+  .conto-movimento { display:flex; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--bordo); font-size:13px; }
+  .conto-movimento:last-child { border-bottom:none; }
+  .conti-inline { margin-top:22px; padding-top:17px; border-top:1px solid var(--bordo); }
+  .conti-inline-intestazione { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }
+  .conti-inline-intestazione .titolo { margin:0; font-size:15px; }
+  .conti-inline-intestazione button { border:0; background:none; color:var(--testo-2); font-size:12px; padding:4px 0; }
+  .conti-inline .conto-card { padding:12px; background:var(--fondo); }
+  .conti-inline .conto-card .conto-nome { margin-bottom:8px; font-size:12px; }
+  .conti-inline .conto-card .conto-saldo { font-size:17px; margin-bottom:3px; }
+  .conti-inline .conto-card .conto-stato { min-height:0; }
+  .conti-inline .conto-card button { margin-top:9px; padding:8px 5px; }
+  @media (max-width:360px) { .conti-home { grid-template-columns:1fr; } }
 
   .avviso {
     background: var(--rosso-chiaro); color: var(--rosso); font-size: 13px;
-    padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;
+    padding: 12px 14px; border: 1px solid var(--rosso); border-radius: var(--r); margin-bottom: 16px;
   }
-  .vuota { font-size: 13px; color: var(--muto); margin: 18px 0; text-align: center; }
-  .x { background: none; border: none; color: var(--bordo); padding: 0; display: flex; }
-  .destra { display: flex; align-items: center; gap: 12px; }
-  .link {
-    width: 100%; background: var(--carta); border: none; border-radius: 16px; padding: 16px 18px;
+  .vuota {
+    font-family: var(--mono); font-size: 12px; color: var(--muto);
+    margin: 18px 0; text-align: center; letter-spacing: .04em;
+  }
+  /* categoria: la quota è il riempimento della riga stessa */
+  .catriga { padding: 11px 0; border-bottom: 1px solid var(--bordo); }
+  .catriga:last-child { border-bottom: none; }
+  .catriga .cap {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; margin-bottom: 7px; cursor: pointer;
+  }
+  .catriga .q {
+    color: var(--testo-2); font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .catriga small {
+    font-family: var(--mono); font-size: 10px; color: var(--muto);
+    margin-left: 4px; letter-spacing: .04em;
+  }
+  .catriga .frec { display: flex; color: var(--muto); transition: transform .25s ease; }
+  .catriga.aperta .fill { opacity: .75; }
+  .catriga .trac { height: 4px; background: var(--fondo); }
+  .catvoci { background: var(--fondo); padding: 2px 12px; margin-top: 6px; }
+  .voce {
     display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; font-size: 13px; font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--fondo);
+  }
+  .voce:last-child { border-bottom: none; }
+  /* fisse: casella di spunta in stile tavola tecnica */
+  .fissa {
+    display: flex; align-items: center; gap: 11px;
+    padding: 11px 0; border-bottom: 1px solid var(--bordo);
+    font-size: 14px; cursor: pointer;
+  }
+  .fissa:last-child { border-bottom: none; }
+  .fissa .spunta {
+    width: 19px; height: 19px; flex: 0 0 19px;
+    border: 1px solid var(--bordo-forte); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .fissa .fnome { flex: 1; }
+  .fissa .fnome small {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .05em;
+    text-transform: uppercase; margin-left: 7px; color: var(--muto);
+  }
+  .fissa .fimp { font-variant-numeric: tabular-nums; color: var(--testo-2); }
+  .fissa.pagata { color: var(--muto); }
+  .fissa.pagata .spunta { background: var(--verde); border-color: var(--verde); }
+  .fissa.pagata .fimp { color: var(--muto); }
+  .fissa.scaduta .spunta { border-color: var(--rosso); }
+  .fissa.scaduta .fnome small { color: var(--rosso); }
+  .fissa.imminente .spunta { border-color: var(--arancio); }
+  .fissa.imminente .fnome small { color: var(--arancio-ink); }
+  .tag {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--verde); border: 1px solid var(--verde); border-radius: 2px;
+    padding: 2px 5px; margin-left: 8px; vertical-align: 1px;
+  }
+
+  .voce .dt {
+    font-family: var(--mono); font-size: 10px; color: var(--muto);
+    margin-left: 7px; letter-spacing: .03em;
+  }
+  .x.chiedi {
+    font-family: var(--mono); font-size: 10px; color: var(--rosso);
+    letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+  }
+  .modpan { padding: 4px 0 12px; }
+  .modcampi { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .modpan label, .pieno-l {
+    display: block; font-family: var(--mono); font-size: 10px; color: var(--muto);
+    letter-spacing: .07em; text-transform: uppercase; margin-top: 8px;
+  }
+  .modpan input {
+    margin-top: 4px; padding: 11px 10px; font-size: 15px;
+    background: var(--carta); border: 1px solid var(--bordo);
+  }
+  .catriga .fill { height: 100%; background: var(--verde); opacity: .45; transition: width .4s ease; }
+  .catriga > span { position: relative; }
+  .catriga small {
+    font-family: var(--mono); font-size: 10px; color: var(--muto);
+    margin-left: 5px; letter-spacing: .04em;
+  }
+  .catriga .frec { display: flex; color: var(--muto); transition: transform .25s ease; }
+  .catriga.aperta .frec { transform: rotate(180deg); }
+  .voce {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; font-size: 13px; font-variant-numeric: tabular-nums;
+  }
+  .catriga .q {
+    color: var(--testo-2); font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: 7px;
+  }
+
+  .x { background: none; border: none; color: var(--bordo-forte); padding: 0; display: flex; }
+  .destra { display: flex; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; }
+  .link {
+    width: 100%; background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--r);
+    padding: 15px 16px; display: flex; justify-content: space-between; align-items: center;
     font-size: 14px; color: var(--testo); margin-bottom: 12px;
   }
+
+  /* UX/UI refinement: gerarchia più chiara, superfici morbide e controlli leggibili */
+  :root { --r: 16px; }
+  body { line-height: 1.45; }
+  #app { max-width: 480px; padding-left: 18px; padding-right: 18px; }
+  .testata { margin-bottom: 22px; min-height: 38px; }
+  .testata b { font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: .12em; }
+  .gruppo { border-radius: 16px; border-color: rgba(184,192,204,.72); box-shadow: 0 4px 18px rgba(23,32,43,.035); }
+  .gruppo.largo { padding: 22px; }
+  .gruppo.medio { padding: 16px; }
+  .titolo { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+  .riga .et { font-family: var(--sans); letter-spacing: .035em; font-size: 11px; }
+  .grande { font-size: clamp(46px, 13vw, 58px); letter-spacing: -.055em; }
+  .grande .cent { font-size: 19px; }
+  .nota { line-height: 1.5; }
+  .piccola { line-height: 1.55; }
+  .barra { height: 8px; border-radius: 999px; background: #EEF1F4; border: 0; }
+  .barra > div { border-radius: 999px; }
+  .oggi span { background: var(--carta); padding: 0 5px; }
+  .pieno, .vuoto, .pillola, .link { border-radius: 12px; transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease; }
+  .pieno { min-height: 48px; font-weight: 700; }
+  .pieno:active, .vuoto:active, .pillola:active, .link:active { transform: scale(.985); }
+  .vuoto { min-height: 48px; }
+  input, textarea { border-radius: 12px; border-color: #DCE2E9; background: #FAFBFC; }
+  input:focus, textarea:focus { border-color: var(--arancio); box-shadow: 0 0 0 3px rgba(240,112,32,.13); }
+  .nav { background: rgba(255,255,255,.96); border-top: 1px solid rgba(184,192,204,.55); box-shadow: 0 -8px 28px rgba(23,32,43,.055); backdrop-filter: blur(16px); }
+  .tab { min-height: 64px; gap: 5px; padding-top: 9px; }
+  .tab span { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+  .tab.on { color: var(--arancio-ink); }
+  .tab.on::before { width: 30px; height: 3px; border-radius: 0 0 3px 3px; }
+  .tab.azione i { width: 42px; height: 42px; border-radius: 14px; background: var(--arancio); box-shadow: 0 5px 12px rgba(240,112,32,.22); }
+  .tondo { border-radius: 12px; }
+  .hero-budget { border: 1px solid rgba(184,192,204,.6); background: linear-gradient(145deg, #FFFFFF 0%, #FCFDFE 100%); }
+  .hero-budget .grande { margin-top: 12px; margin-bottom: 10px; }
+  .hero-budget .barra { margin-top: 8px; }
+  .daily-allowance { margin-top: 18px; padding: 13px 14px; border-radius: 12px; background: #F3F6F9; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .daily-allowance span { font-size: 12px; color: var(--testo-2); }
+  .daily-allowance strong { font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .daily-allowance small { color: var(--muto); font-size: 10px; font-weight: 500; }
+  .card-previsione { position: relative; overflow: hidden; }
+  .card-previsione > p[id="previsioneFineCiclo"] { font-weight: 800; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
+  .link-azione { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin-top: 15px; padding: 13px 14px; border: 1px solid #DCE2E9; border-radius: 12px; background: #F8FAFB; color: var(--testo); font-size: 13px; font-weight: 700; text-align: left; }
+  .link-azione span { color: var(--arancio-ink); font-size: 19px; line-height: 1; }
+  .card-risparmio { border-color: rgba(24,116,91,.18); }
+  .fissa { min-height: 50px; }
+  .fissa .spunta { border-radius: 8px; }
+  button:focus-visible, [data-a]:focus-visible { outline: 3px solid rgba(240,112,32,.55); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+  @media (max-width: 360px) {
+    #app { padding-left: 14px; padding-right: 14px; }
+    .gruppo.largo { padding: 18px; }
+    .grande { font-size: 44px; }
+    .daily-allowance { align-items: flex-start; flex-direction: column; gap: 4px; }
+  }
+
+
+  .conti-riepilogo { margin-top:18px; padding-top:14px; }
+  .bper-mini { display:grid; grid-template-columns:1fr auto; align-items:center; gap:3px 12px; padding:13px 15px; border-radius:12px; background:var(--fondo); }
+  .bper-mini span { color:var(--testo-2); font-size:12px; }
+  .bper-mini strong { font-size:19px; font-variant-numeric:tabular-nums; }
+  .bper-mini small { grid-column:1 / -1; color:var(--muto); font-size:11px; }
+  .home-dettagli { margin-top:12px; border:1px solid var(--bordo); border-radius:14px; overflow:hidden; background:var(--carta); }
+  .home-dettagli > summary { list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px; cursor:pointer; font-size:13px; font-weight:600; }
+  .home-dettagli > summary::-webkit-details-marker { display:none; }
+  .home-dettagli > summary span { color:var(--muto); font-size:11px; font-weight:500; }
+  .home-dettagli[open] > summary { border-bottom:1px solid var(--bordo); }
+  .home-dettagli-corpo { padding:0 12px 12px; }
+  .home-dettagli-corpo > .gruppo { margin-top:12px; }
+
+  /* Spaziature coerenti e protezione da contenuti troppo larghi su mobile */
+  .gruppo, .home-dettagli, .conti-riepilogo { min-width: 0; }
+  .gruppo.largo { padding: 20px; }
+  .gruppo.medio { padding: 16px; }
+  .gruppo > .titolo:first-child { margin-top: 0; }
+  .gruppo > :last-child { margin-bottom: 0; }
+  .conti-riepilogo { margin-top: 14px; }
+  .home-dettagli { margin-top: 10px; }
+  .home-dettagli-corpo { padding: 12px 14px 14px; }
+  .home-dettagli-corpo > .gruppo { margin-top: 12px; }
+  .home-dettagli-corpo > .titolo { margin: 0 0 12px; }
+  .home-nuovo-mese { display:block; margin-top:12px; }
+  input, select, textarea, button { max-width: 100%; }
+  .bper-mini strong { overflow-wrap: anywhere; }
+  @media (max-width: 360px) {
+    .gruppo.largo { padding: 16px; }
+    .home-dettagli > summary { padding: 14px; }
+    .home-dettagli-corpo { padding: 0 10px 10px; }
+  }
+
 </style>
 </head>
 <body>
@@ -139,11 +411,14 @@
     { nome: "Varie", cosa: "qualche extra che non sta altrove" }
   ];
 
-  var VUOTO = { fisse: [], cuscinetto: 0, risparmiTotali: 0, cicli: [], spese: [], entrate: [], pacchetti: [] };
+  // pagate: { "<id ciclo>": { "<id fissa>": true } } — lo stato vive nel ciclo, non nella fissa,
+  // così un ciclo nuovo riparte da sé con tutto "da pagare" senza bisogno di azzeramenti
+  var VUOTO = { fisse: [], cuscinetto: 0, risparmiTotali: 0, cicli: [], spese: [], entrate: [], pacchetti: [], pagate: {}, contoAttuale: { nome: "Conto attuale", saldo: null, movimenti: [] }, contoBper: { nome: "BPER", saldo: null, pacMensile: null, commissioni: null, movimenti: [] } };
 
   var d = null, vista = "home", avviso = null;
   var tipo = "spesa", categoria = "Varie";
-  var pacchettoAperto = null, spesaAperta = null, dove = "risparmi";
+  var pacchettoAperto = null, spesaAperta = null, dove = "risparmi", categoriaAperta = null;
+  var confermaElim = null, inModifica = null;
   var bozza = {};
 
   // ---- utilità ----
@@ -151,6 +426,14 @@
     return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n || 0);
   }
   function secco(n) { return new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0 }).format(n || 0); }
+  function nomePacchettoMensile(a) {
+    var mesi = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+    var data = a && a.id ? new Date(String(a.id).slice(0, 10) + "T12:00:00") : new Date();
+    if (isNaN(data.getTime())) data = new Date();
+    return "Risparmio " + mesi[data.getMonth()] + " " + data.getFullYear();
+  }
+  // Le proposte di accantonamento sono sempre arrotondate per difetto a multipli di 50 €.
+  function arrotondaSuggerimento(n) { return Math.floor(Math.max(0, n) / 50) * 50; }
   function num(s) { var n = parseFloat(String(s == null ? "" : s).replace(",", ".")); return isNaN(n) ? 0 : n; }
   function arr(n) { return Math.round(n * 100) / 100; }
   function esc(s) {
@@ -162,7 +445,10 @@
     var x = new Date();
     return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
   }
-  function daISO(s) { var p = s.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function daISO(s) { var p = String(s).split(".")[0].split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function giornoMese(iso) {
+    return daISO(iso).toLocaleDateString("it-IT", { day: "numeric", month: "short" });
+  }
   function dataBreve(iso) { return daISO(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long" }); }
   function giorniNelMese(a, m) { return new Date(a, m + 1, 0).getDate(); }
   function prossimaAttesa(iso) {
@@ -176,11 +462,50 @@
     return x;
   }
 
+  // BPER viene aggiornato quando l'utente apre un nuovo ciclo stipendio,
+  // non in base al giorno in cui apre l'app. Il saldo è una stima locale, non bancario.
+  function applicaImpegniBperNuovoCiclo() {
+    var b = d && d.contoBper;
+    if (!b || b.saldo == null) return;
+    var numeroCiclo = Math.max(0, (d.cicli || []).filter(function (x) { return x.chiuso; }).length);
+    // un ciclo già addebitato non viene toccato una seconda volta
+    if (b.ultimoCicloAddebitato === numeroCiclo) return;
+
+    var pac = Math.max(0, Number(b.pacMensile) || 0);
+    var freqMesi = { mensile: 1, trimestrale: 3, semestrale: 6, annuale: 12 }[b.frequenzaSpesa || "mensile"] || 1;
+    var spesa = Math.max(0, Number(b.commissioni) || 0);
+
+    // la spesa esce alla prima chiusura utile e poi ogni freqMesi cicli, contati
+    // dall'ultima volta che è uscita: così la cadenza è prevedibile e non dipende
+    // da quale numero di ciclo capita
+    var fee = 0;
+    if (spesa > 0) {
+      var ultima = b.ultimoCicloSpesa;
+      if (ultima == null || (numeroCiclo - ultima) >= freqMesi) {
+        fee = spesa;
+        b.ultimoCicloSpesa = numeroCiclo;
+      }
+    }
+
+    b.saldo = arr(Number(b.saldo) - pac - fee);
+    b.ultimoCicloAddebitato = numeroCiclo;
+  }
+
   // ---- dati ----
   function carica() {
     try {
       var g = localStorage.getItem(CHIAVE);
       d = g ? Object.assign({}, VUOTO, JSON.parse(g)) : Object.assign({}, VUOTO);
+      // Compatibilità con backup creati prima della gestione dei conti.
+      d.contoAttuale = Object.assign({}, VUOTO.contoAttuale, d.contoAttuale || {});
+      if (!Array.isArray(d.contoAttuale.movimenti)) d.contoAttuale.movimenti = [];
+      d.contoBper = Object.assign({}, VUOTO.contoBper, d.contoBper || {});
+      if (!Array.isArray(d.contoBper.movimenti)) d.contoBper.movimenti = [];
+      // dati salvati prima di questa versione: allineo il contatore della spesa
+      // all'ultimo addebito noto, così la cadenza riparte da lì e non da zero
+      if (d.contoBper.ultimoCicloSpesa == null && d.contoBper.ultimoCicloAddebitato != null) {
+        d.contoBper.ultimoCicloSpesa = d.contoBper.ultimoCicloAddebitato;
+      }
     } catch (e) {
       d = Object.assign({}, VUOTO);
       avviso = "Non riesco a leggere i dati salvati.";
@@ -216,9 +541,29 @@
       inTasca: arr(d.cuscinetto + arr(budget - speso)),
       spese: spese,
       entrateCiclo: d.entrate.filter(function (e) { return e.ciclo === a.id; }),
-      inArrivo: d.fisse.filter(function (f) { return f.giorno && occorrenzaDi(f.giorno, a.id) > new Date(); })
-        .sort(function (x, y) { return occorrenzaDi(x.giorno, a.id) - occorrenzaDi(y.giorno, a.id); })
+      statoFisse: statoFisse(a.id)
     };
+  }
+
+  function statoFisse(cicloId) {
+    var segnate = (d.pagate || {})[cicloId] || {};
+    var oggi = new Date(); oggi.setHours(0, 0, 0, 0);
+    return d.fisse.map(function (f) {
+      var pagata = !!segnate[f.id];
+      var scad = f.giorno ? occorrenzaDi(f.giorno, cicloId) : null;
+      var giorni = scad ? Math.round((scad - oggi) / 86400000) : null;
+      var stato = pagata ? "pagata"
+        : giorni === null ? "attesa"
+        : giorni < 0 ? "scaduta"
+        : giorni <= 3 ? "imminente"
+        : "attesa";
+      return { f: f, pagata: pagata, scad: scad, giorni: giorni, stato: stato };
+    }).sort(function (a, b) {
+      if (a.pagata !== b.pagata) return a.pagata ? 1 : -1;
+      if (a.giorni === null) return 1;
+      if (b.giorni === null) return -1;
+      return a.giorni - b.giorni;
+    });
   }
 
   function daRimettere() {
@@ -230,16 +575,82 @@
     piu: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     chiudi: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
     ing: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 3.6 1.65 1.65 0 0010 2.09V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 8a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+    spunta: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    giu: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+    tabBudget: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16"/><path d="M3 10h18M9 10v10"/></svg>',
+    tabSpese: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>',
+    tabParte: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13"/><path d="M3 7l2-3h14l2 3M12 11v5"/></svg>',
+    tabSet: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 13h16M4 19h16"/><circle cx="9" cy="7" r="2" fill="var(--carta)"/><circle cx="15" cy="13" r="2" fill="var(--carta)"/><circle cx="7" cy="19" r="2" fill="var(--carta)"/></svg>',
     x: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
   };
 
-  function testata(t, azione) {
-    return '<div class="testata"><b>' + esc(t) + '</b><button class="tondo" data-a="' + azione + '">' + ICONA.chiudi + '</button></div>';
+  function scarica(nome, testo, tipoMime) {
+    try {
+      var blob = new Blob([testo], { type: tipoMime + ";charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = nome;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function csv() {
+    var campi = ["tipo", "data", "mese", "categoria", "nota", "importo"];
+    var fuga = function (v) {
+      v = v == null ? "" : String(v);
+      return /[";\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+    };
+    var r = [campi.join(";")];
+    d.spese.forEach(function (s) {
+      r.push([ "spesa", s.data || "", s.ciclo, s.categoria || "", s.nota || "",
+        String(s.importo).replace(".", ",") ].map(fuga).join(";"));
+    });
+    d.entrate.forEach(function (e) {
+      r.push([ "entrata", e.data || "", e.ciclo, "", e.nota || "",
+        String(e.importo).replace(".", ",") ].map(fuga).join(";"));
+    });
+    d.fisse.forEach(function (f) {
+      r.push([ "fissa", "", "", "", f.nome + (f.giorno ? " (il " + f.giorno + ")" : ""),
+        String(f.importo).replace(".", ",") ].map(fuga).join(";"));
+    });
+    return r.join("\n");
+  }
+
+  function navigazione() {
+    var voci = [
+      ["home", "tabBudget", "Budget"],
+      ["elenco", "tabSpese", "Spese"],
+      ["__azione__", "piu", ""],
+      ["pacchetti", "tabParte", "Da parte"],
+      ["impostazioni", "tabSet", "Opzioni"]
+    ];
+    var dr = daRimettere();
+    var h = '<div class="nav"><div class="nav-in">';
+    voci.forEach(function (v) {
+      if (v[0] === "__azione__") {
+        h += '<button class="tab azione" data-a="vaiAggiungi" aria-label="Registra"><i>' + ICONA.piu + '</i></button>';
+        return;
+      }
+      // "conti" è una sottosezione di "Da parte": la tab resta accesa mentre ci sei dentro
+      var attiva = (vista === v[0] || (vista === "conti" && v[0] === "pacchetti")) ? " on" : "";
+      var segna = v[0] === "pacchetti" && dr > 0 ? '<span class="pallino"></span>' : "";
+      h += '<button class="tab' + attiva + '" data-a="vai' + v[0].charAt(0).toUpperCase() + v[0].slice(1) + '">' +
+        segna + ICONA[v[1]] + '<span>' + v[2] + '</span></button>';
+    });
+    return h + '</div></div>';
+  }
+
+  function testata(t, azione, senzaX) {
+    return '<div class="testata"><b>' + esc(t) + '</b>' +
+      (senzaX ? '' : '<button class="tondo" data-a="' + azione + '">' + ICONA.chiudi + '</button>') + '</div>';
   }
   function riga(et, va, colore, forte, ultima) {
     var st = colore ? ' style="color:' + colore + '"' : "";
     return '<div class="riga' + (forte ? " forte" : "") + (ultima ? " ultima" : "") + '">' +
-      '<span class="et"' + st + '>' + esc(et) + '</span><span class="va"' + st + '>' + esc(va) + '</span></div>';
+      '<span class="et">' + esc(et) + '</span><span class="va"' + st + '>' + esc(va) + '</span></div>';
   }
   function cifraGrande(n, colore) {
     var intero = secco(Math.floor(Math.abs(n)));
@@ -264,9 +675,11 @@
     var a = attivo(), c = conti(), scoperto = c.resta < 0;
     var pct = c.budget > 0 ? Math.min(100, (c.speso / c.budget) * 100) : 0;
     var pctT = Math.min(100, (c.trascorsi / c.durata) * 100);
-    var h = '<div class="testata"><b>Budget</b><button class="tondo" data-a="vaiImpostazioni">' + ICONA.ing + '</button></div>';
+    var ca = d.contoAttuale || { saldo: null, movimenti: [] };
+    var cb = d.contoBper || { saldo: null, movimenti: [] };
+    var h = '<div class="testata"><b>Budget</b></div>';
 
-    h += '<div class="gruppo largo">' +
+    h += '<div class="gruppo largo hero-budget">' +
       '<p class="titolo" style="margin-left:0">' + (scoperto ? "Sei oltre il budget di" : "Da spendere") + '</p>' +
       cifraGrande(c.resta, scoperto ? "var(--rosso)" : "var(--testo)") +
       '<p class="nota" style="margin-bottom:20px">' +
@@ -275,13 +688,27 @@
       '<div class="barra"><div style="width:' + pct + '%;background:' + (scoperto ? "var(--rosso)" : "var(--verde)") + ';opacity:' + (scoperto ? .7 : .45) + '"></div></div>' +
       '<div class="oggi"><i style="left:' + pctT + '%"></i><span style="left:' + pctT + '%">oggi</span></div>' +
       '<p class="nota" style="font-size:12px;margin-top:8px">Speso ' + euro(c.speso) + ' su ' + euro(c.budget) + ' · giorno ' + c.trascorsi + ' di ' + c.durata + '</p>' +
+      '<div class="daily-allowance"><span>Ritmo medio disponibile</span><strong>' + euro(c.giorni > 0 ? Math.max(0, c.resta / c.giorni) : 0) + '<small> / giorno</small></strong></div>' +
+      '<div class="conti-inline conti-riepilogo"><div class="conti-inline-intestazione"><p class="titolo">BPER</p><button data-a="vaiConti">Apri gestione conti →</button></div>' +
+      '<div class="bper-mini"><span>Saldo BPER</span><strong>' + (cb.saldo == null ? '— €' : euro(cb.saldo)) + '</strong><small>' + (cb.saldo == null ? 'Inserisci il saldo iniziale' : 'Aggiornato in base a PAC e spese ricorrenti') + '</small></div>' +
+      '<p class="piccola" style="margin:9px 0 0">Il budget qui sopra resta il tuo riferimento per le spese quotidiane.</p></div>' +
       '</div>';
 
-    h += '<div class="gruppo" style="background:var(--verde-chiaro);padding:20px">' +
+
+    var previsione = previsioneFineCiclo();
+    h += '<details class="home-dettagli"><summary>Previsioni e risparmio <span>Apri</span></summary><div class="home-dettagli-corpo"><div class="gruppo largo card-previsione" style="margin-top:12px">' +
+      '<p class="titolo" style="margin-left:0">Previsione a fine ciclo</p>' +
+      '<p id="previsioneFineCiclo" style="font-family:var(--serif);font-size:32px;line-height:1.1;margin:10px 0 8px;color:' + (previsione.previsto < 0 ? 'var(--rosso)' : 'var(--verde)') + '">' + euro(previsione.previsto) + '</p>' +
+      '<p id="previsioneFineCicloMessaggio" class="piccola" style="margin:0 0 8px">' + (previsione.previsto < 0 ? 'Con l’andamento attuale potresti superare il budget prima del prossimo stipendio.' : 'Saldo spendibile che potresti conservare al prossimo stipendio, se le spese continuano con questo andamento.') + '</p>' +
+      '<p id="previsioneFineCicloDettagli" class="piccola" style="margin:0">' + (previsione.affidabile ? 'Media spese registrate: ' + euro(previsione.mediaGiornaliera) + ' al giorno · ' + previsione.giorni + (previsione.giorni === 1 ? ' giorno' : ' giorni') + ' rimanenti' : 'Stima provvisoria: registra alcune spese e lascia passare almeno 3 giorni del ciclo per ottenere una previsione più utile.') + '</p>' +
+      '<button class="link-azione" data-a="vaiPacchetti">Valuta quanto mettere da parte <span aria-hidden="true">→</span></button>' +
+      '</div>';
+
+    h += '<div class="gruppo card-risparmio" style="background:var(--verde-chiaro);padding:20px">' +
       '<p class="titolo" style="color:var(--verde);margin-left:0">Da parte questo mese</p>' +
       '<input id="risparmio" inputmode="decimal" value="' + (a.risparmio || "") + '" placeholder="0" style="background:var(--carta);font-family:var(--serif);font-size:20px">' +
       '<p style="font-size:12px;color:var(--verde);margin:10px 0 0;opacity:.85">In totale hai messo via ' + euro(d.risparmiTotali) + '</p>' +
-      '</div>';
+      '</div></div></details>';
 
     var dr = daRimettere();
     if (dr > 0) {
@@ -289,14 +716,11 @@
         '<p class="titolo" style="color:var(--giallo);margin-left:0">Da rimettere nei pacchetti</p>' +
         '<p style="font-family:var(--serif);font-size:30px;letter-spacing:-.02em;line-height:1;margin:10px 0 8px;color:var(--giallo)">' + euro(dr) + '</p>' +
         '<p style="font-size:12px;color:var(--giallo);margin:0;opacity:.85;line-height:1.5">Rimettili quando puoi, anche un po\' alla volta: ogni versamento scala da qui.</p>' +
-        '<button data-a="vaiPacchetti" style="margin-top:14px;width:100%;background:var(--carta);border:none;border-radius:10px;padding:13px 0;font-size:13px;color:var(--giallo)">Rimetti ora</button>' +
+        '<button data-a="vaiPacchetti" style="margin-top:14px;width:100%;background:var(--carta);border:none;border-radius:6px;padding:13px 0;font-size:13px;color:var(--giallo)">Rimetti ora</button>' +
         '</div>';
     }
 
-    h += '<button class="link" data-a="vaiPacchetti"><span>I tuoi pacchetti</span><span style="color:var(--muto)">' +
-      euro((d.pacchetti || []).reduce(function (s, x) { return s + x.saldo; }, 0)) + '</span></button>';
-
-    h += '<p class="titolo">Come si compone</p><div class="gruppo">' +
+    h += '<details class="home-dettagli"><summary>Dettaglio del budget <span>Apri</span></summary><div class="home-dettagli-corpo"><p class="titolo">Come si compone</p><div class="gruppo">' +
       riga("Entrato il " + dataBreve(a.id), euro(a.stipendio)) +
       (a.riporto !== 0 ? riga("Rimasto dal mese scorso", "+ " + euro(a.riporto), "var(--giallo)") : "") +
       (c.entrate > 0 ? riga("Entrate in più", "+ " + euro(c.entrate), "var(--verde)") : "") +
@@ -307,20 +731,30 @@
       riga("Ti resta", euro(c.resta), scoperto ? "var(--rosso)" : null, true, true) +
       '</div>';
 
-    if (c.inArrivo.length) {
-      h += '<p class="titolo">Fisse ancora da pagare</p><div class="gruppo">';
-      c.inArrivo.forEach(function (f, i) {
-        h += riga(f.nome, "il " + f.giorno + " · " + euro(f.importo), null, false, i === c.inArrivo.length - 1);
+    if (c.statoFisse.length) {
+      var daPagare = c.statoFisse.filter(function (x) { return !x.pagata; });
+      var restanti = arr(daPagare.reduce(function (s, x) { return s + x.f.importo; }, 0));
+      h += '<p class="titolo">Spese fisse' + (daPagare.length ? ' · ancora ' + euro(restanti) : ' · tutte pagate') + '</p>';
+      h += '<div class="gruppo" style="padding:2px 16px">';
+      c.statoFisse.forEach(function (x) {
+        var quando = x.giorni === null ? ""
+          : x.pagata ? ""
+          : x.giorni < 0 ? "scaduta"
+          : x.giorni === 0 ? "oggi"
+          : x.giorni === 1 ? "domani"
+          : "tra " + x.giorni + " giorni";
+        h += '<div class="fissa ' + x.stato + '" data-a="pagaFissa" data-v="' + x.f.id + '">' +
+          '<span class="spunta">' + (x.pagata ? ICONA.spunta : '') + '</span>' +
+          '<span class="fnome">' + esc(x.f.nome) +
+          (quando ? '<small>' + quando + '</small>' : '') + '</span>' +
+          '<span class="fimp">' + euro(x.f.importo) + '</span></div>';
       });
-      h += '</div><p class="piccola">Già tolte dal conto qui sopra: in banca le vedi ancora, ma non sono tue.</p>';
+      h += '</div><p class="piccola">Gli importi sono già tolti dal budget qui sopra: la spunta serve solo a ricordarti cosa è uscito dal conto.</p>';
     }
 
-    h += '<button class="vuoto" style="width:100%;color:var(--muto);padding:16px 0" data-a="vaiNuovoMese">È arrivato lo stipendio</button>';
+    h += '</div></details>';
+    h += '<button class="vuoto home-nuovo-mese" style="width:100%;color:var(--muto);padding:16px 0" data-a="vaiNuovoMese">È arrivato lo stipendio</button>';
 
-    h += '<div class="fondo-fisso"><div class="due">' +
-      '<button class="pieno" data-a="vaiAggiungi">' + ICONA.piu + ' Ho speso</button>' +
-      '<button class="vuoto" data-a="vaiElenco">Elenco</button>' +
-      '</div></div>';
     return h;
   }
 
@@ -352,31 +786,59 @@
 
   function vistaElenco() {
     var a = attivo(), c = conti();
-    var h = testata("Dal " + dataBreve(a.id), "vaiHome");
+    var h = testata("Dal " + dataBreve(a.id), "vaiHome", true);
 
-    var somme = {};
+    var gruppi = {};
     c.spese.forEach(function (s) {
       var k = s.categoria || "Senza categoria";
-      somme[k] = arr((somme[k] || 0) + s.importo);
+      if (!gruppi[k]) gruppi[k] = { tot: 0, voci: [] };
+      gruppi[k].tot = arr(gruppi[k].tot + s.importo);
+      gruppi[k].voci.push(s);
     });
-    var perCat = Object.keys(somme).map(function (k) { return [k, somme[k]]; }).sort(function (x, y) { return y[1] - x[1]; });
+    var perCat = Object.keys(gruppi).map(function (k) { return [k, gruppi[k]]; })
+      .sort(function (x, y) { return y[1].tot - x[1].tot; });
+    var massimo = perCat.length ? perCat[0][1].tot : 1;
 
-    h += '<p class="titolo">Spese</p><div class="gruppo">';
-    if (!c.spese.length) h += '<p class="vuota">Ancora niente</p>';
-    c.spese.slice().reverse().forEach(function (s, i, tutte) {
-      var ultima = i === tutte.length - 1;
-      h += '<div style="border-bottom:' + (ultima ? "none" : "1px solid var(--fondo)") + '">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:14px">' +
-        '<span data-a="apriSpesa" data-v="' + s.id + '" style="flex:1;color:' + (s.nota ? "var(--testo)" : "var(--muto)") + '">' +
-        esc(s.nota || "Senza nota") +
-        '<span style="color:var(--muto);font-size:12px;margin-left:8px">' + esc(s.categoria || "senza categoria") + '</span></span>' +
-        '<span class="destra"><span>' + euro(s.importo) + '</span>' +
-        '<button class="x" data-a="elimSpesa" data-v="' + s.id + '">' + ICONA.x + '</button></span></div>';
-      if (spesaAperta === s.id) {
-        h += '<div class="pillole" style="padding-bottom:14px;margin-bottom:0">';
-        CATEGORIE.forEach(function (x) {
-          h += '<button class="pillola' + (s.categoria === x.nome ? " on" : "") + '" style="background:' +
-            (s.categoria === x.nome ? "var(--scuro)" : "var(--fondo)") + '" data-a="setCat" data-v="' + s.id + '" data-c="' + x.nome + '">' + x.nome + '</button>';
+    h += '<p class="titolo">Categorie</p><div class="gruppo" style="padding:0 16px">';
+    if (!perCat.length) h += '<p class="vuota">Ancora niente</p>';
+    perCat.forEach(function (p) {
+      var nome = p[0], g = p[1], aperta = categoriaAperta === nome;
+      h += '<div class="catriga' + (aperta ? ' aperta' : '') + '">' +
+        '<div class="cap" data-a="apriCategoria" data-v="' + esc(nome) + '">' +
+        '<span>' + esc(nome) + ' <small>' + g.voci.length + '</small></span>' +
+        '<span class="q">' + euro(g.tot) + '<span class="frec">' + ICONA.giu + '</span></span></div>' +
+        '<div class="trac"><div class="fill" style="width:' + ((g.tot / massimo) * 100) + '%"></div></div>';
+      if (aperta) {
+        h += '<div class="catvoci">';
+        g.voci.slice().reverse().forEach(function (s) {
+          var chiedo = confermaElim === "s" + s.id;
+          h += '<div class="voce">' +
+            '<span data-a="apriSpesa" data-v="' + s.id + '" style="flex:1;color:' + (s.nota ? 'var(--testo-2)' : 'var(--muto)') + '">' +
+            esc(s.nota || "senza nota") +
+            (s.data ? '<small class="dt">' + giornoMese(s.data) + '</small>' : '') + '</span>' +
+            '<span class="destra"><span>' + euro(s.importo) + '</span>' +
+            '<button class="x' + (chiedo ? ' chiedi' : '') + '" data-a="elimSpesa" data-v="' + s.id + '">' +
+            (chiedo ? 'elimino?' : ICONA.x) + '</button></span></div>';
+          if (spesaAperta === s.id) {
+            h += '<div class="modpan">';
+            if (inModifica === s.id) {
+              h += '<div class="modcampi">' +
+                '<label>Importo<input id="mImp" inputmode="decimal" value="' + s.importo + '"></label>' +
+                '<label>Data<input id="mData" type="date" value="' + esc(s.data || "") + '"></label>' +
+                '</div>' +
+                '<label class="pieno-l">Descrizione<input id="mNota" value="' + esc(s.nota || "") + '"></label>' +
+                '<div class="due" style="margin-top:10px">' +
+                '<button class="pieno" data-a="salvaModifica" data-v="' + s.id + '">Salva</button>' +
+                '<button class="vuoto" data-a="modifica" data-v="' + s.id + '">Annulla</button></div>';
+            } else {
+              h += '<div class="pillole" style="margin-bottom:8px">';
+              CATEGORIE.forEach(function (x) {
+                h += '<button class="pillola' + (s.categoria === x.nome ? " on" : "") + '" data-a="setCat" data-v="' + s.id + '" data-c="' + x.nome + '">' + x.nome + '</button>';
+              });
+              h += '</div><button class="vuoto" style="width:100%;padding:11px 0" data-a="modifica" data-v="' + s.id + '">Correggi importo, data o descrizione</button>';
+            }
+            h += '</div>';
+          }
         });
         h += '</div>';
       }
@@ -384,24 +846,14 @@
     });
     h += '</div><p class="piccola">In tutto ' + euro(c.speso) + ' su ' + euro(c.budget) + '</p>';
 
-    if (perCat.length) {
-      h += '<p class="titolo">Dove sono finiti</p><div class="gruppo" style="padding:18px">';
-      perCat.forEach(function (p, i) {
-        h += '<div style="margin-bottom:' + (i === perCat.length - 1 ? 0 : 14) + 'px">' +
-          '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>' + esc(p[0]) + '</span>' +
-          '<span style="color:var(--muto)">' + euro(p[1]) + '</span></div>' +
-          '<div class="barra" style="height:6px"><div style="width:' + ((p[1] / perCat[0][1]) * 100) + '%;background:var(--verde);opacity:.4"></div></div></div>';
-      });
-      h += '</div>';
-    }
-
     if (c.entrateCiclo.length) {
       h += '<p class="titolo">Entrate in più</p><div class="gruppo">';
       c.entrateCiclo.slice().reverse().forEach(function (e, i, tutte) {
         h += '<div class="riga' + (i === tutte.length - 1 ? " ultima" : "") + '">' +
           '<span>' + esc(e.nota || "Senza nota") + '</span>' +
           '<span class="destra"><span style="color:var(--verde)">+ ' + euro(e.importo) + '</span>' +
-          '<button class="x" data-a="elimEntrata" data-v="' + e.id + '">' + ICONA.x + '</button></span></div>';
+          '<button class="x' + (confermaElim === "e" + e.id ? ' chiedi' : '') + '" data-a="elimEntrata" data-v="' + e.id + '">' +
+          (confermaElim === "e" + e.id ? 'elimino?' : ICONA.x) + '</button></span></div>';
       });
       h += '</div>';
     }
@@ -418,16 +870,71 @@
     return h;
   }
 
+  // Stima orientativa del saldo spendibile a fine ciclo, basata sulle spese
+  // variabili registrate finora. Le spese fisse sono già sottratte dal budget.
+  function previsioneFineCiclo() {
+    var c = conti();
+    if (!c) return { disponibile: false, affidabile: false, mediaGiornaliera: 0, previsto: 0, giorni: 0 };
+    var trascorsi = Math.max(0, c.trascorsi);
+    var giorniOsservati = Math.max(1, trascorsi + 1);
+    var media = arr(c.speso / giorniOsservati);
+    var abbastanzaDati = trascorsi >= 2 && c.speso > 0;
+    var previsto = abbastanzaDati ? arr(c.resta - media * c.giorni) : c.resta;
+    return {
+      disponibile: true,
+      affidabile: abbastanzaDati,
+      mediaGiornaliera: media,
+      previsto: previsto,
+      giorni: c.giorni,
+      trascorsi: trascorsi
+    };
+  }
+
+  // Suggerimento prudente: accantonare al massimo metà del residuo previsto,
+  // e solo dopo aver registrato spese sufficienti a stimare un andamento.
+  function suggerimentoAccantonamento() {
+    var c = conti();
+    var previsione = previsioneFineCiclo();
+    if (!c || c.resta <= 0) return 0;
+    // Nei primi giorni del nuovo ciclo la previsione non è ancora affidabile:
+    // proponi una quota prudente basata sul residuo corrente, sempre a multipli di 50 €.
+    var base = previsione.affidabile ? previsione.previsto : c.resta;
+    if (base <= 0) return 0;
+    return arrotondaSuggerimento(Math.min(c.resta, Math.max(0, base * 0.25)));
+  }
+
+  // Suggerimento indicativo per il cuscinetto: considera il residuo prima
+  // del cuscinetto e le spese registrate; resta una stima prudenziale.
+  function suggerimentoCuscinetto() {
+    var c = conti();
+    if (!c) return 0;
+    var primaCuscinetto = arr(c.resta + d.cuscinetto);
+    var previsione = previsioneFineCiclo();
+    var previstoPrima = previsione.affidabile ? arr(previsione.previsto + d.cuscinetto) : primaCuscinetto;
+    // Nel ciclo appena aperto usa una stima prudente provvisoria, non bloccare la funzione.
+    var quota = previsione.affidabile ? 0.5 : 0.25;
+    return arrotondaSuggerimento(Math.min(Math.max(0, primaCuscinetto), Math.max(0, previstoPrima * quota)));
+  }
+
   function vistaPacchetti() {
     var p = d.pacchetti || [];
     var totale = arr(p.reduce(function (s, x) { return s + x.saldo; }, 0));
-    var h = testata("Da parte", "vaiHome");
+    var h = testata("Da parte", "vaiHome", true);
 
     h += '<div class="gruppo largo"><p class="titolo" style="margin-left:0">In tutto</p>' +
       '<p style="font-family:var(--serif);font-size:44px;letter-spacing:-.03em;line-height:1;margin:12px 0 8px;color:var(--verde)">' + euro(totale) + '</p>' +
       (daRimettere() > 0 ? '<p style="font-size:13px;color:var(--giallo);margin:0">' + euro(daRimettere()) + ' sbloccati, da rimettere</p>' : '') +
       '</div>';
 
+    var suggerito = suggerimentoAccantonamento();
+    h += '<div class="gruppo largo" style="padding:10px;background:var(--verde-chiaro)">' +
+      '<div style="display:grid;grid-template-columns:minmax(72px,.75fr) minmax(90px,1fr) auto;gap:7px;align-items:center">' +
+      '<input id="autoImporto" inputmode="decimal" value="' + (suggerito > 0 ? String(secco(suggerito)) : '') + '" placeholder="Importo €" aria-label="Importo da accantonare" style="min-width:0;width:100%;box-sizing:border-box;background:var(--carta);border-radius:8px;padding:12px 8px">' +
+      '<input id="autoNomePacchetto" value="' + esc(bozza.autoNomePacchetto || nomePacchettoMensile(attivo())) + '" placeholder="Nome pacchetto" aria-label="Nome del pacchetto" style="min-width:0;width:100%;box-sizing:border-box;background:var(--carta);border-radius:8px;padding:12px 8px">' +
+      '<button class="pieno" aria-label="Crea pacchetto" title="Crea pacchetto" style="margin:0;padding:12px 13px;background:var(--verde);border-color:var(--verde);white-space:nowrap" data-a="accantonaAuto">' + ICONA.piu + '</button>' +
+      '</div></div>';
+
+    h += '<div class="gruppo medio" style="margin-top:14px"><b style="display:block;margin-bottom:5px">Hai aperto un conto BPER?</b><p class="piccola" style="margin:0 0 10px">Puoi registrare un trasferimento da un pacchetto al conto senza far aumentare il budget mensile.</p><button class="vuoto" style="width:100%" data-a="vaiConti">Configura o visualizza BPER</button></div>';
     h += '<p class="titolo">Pacchetti</p><div class="gruppo">';
     if (!p.length) h += '<p class="vuota">Nessun pacchetto ancora</p>';
     p.forEach(function (x, i) {
@@ -437,13 +944,17 @@
         '<span>' + euro(x.saldo) + '</span></div>';
       if (pacchettoAperto === x.id) {
         h += '<div style="padding-bottom:16px">' +
-          '<div style="background:var(--fondo);border-radius:10px;padding:12px 14px;margin-bottom:8px">' +
+          '<div style="background:var(--fondo);border-radius:6px;padding:12px 14px;margin-bottom:8px">' +
           '<div class="campo-cifra"><input class="cifra" id="mov" inputmode="decimal" style="font-size:26px" value="' + esc(bozza.mov || "") + '" placeholder="0,00"><span style="font-size:16px">€</span></div></div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px">' +
-          '<button class="pieno" style="border-radius:12px;padding:13px 0;background:var(--giallo-chiaro);color:var(--giallo)" data-a="sblocca" data-v="' + x.id + '">Sblocco</button>' +
-          '<button class="pieno" style="border-radius:12px;padding:13px 0;background:var(--verde-chiaro);color:var(--verde)" data-a="rimetti" data-v="' + x.id + '">Rimetto</button>' +
-          '<button class="pieno" style="border-radius:12px;padding:0 14px;background:var(--carta);color:var(--bordo)" data-a="elimPacchetto" data-v="' + x.id + '">' + ICONA.x + '</button>' +
+          '<button class="pieno" style="border-radius:6px;padding:13px 0;background:var(--giallo-chiaro);color:var(--giallo)" data-a="sblocca" data-v="' + x.id + '">Sblocco</button>' +
+          '<button class="pieno" style="border-radius:6px;padding:13px 0;background:var(--verde-chiaro);color:var(--verde)" data-a="rimetti" data-v="' + x.id + '">Rimetto</button>' +
+          '<button class="pieno" style="border-radius:6px;padding:0 14px;background:var(--carta);color:' +
+          (confermaElim === "p" + x.id || confermaElim === "scelta" + x.id ? 'var(--rosso);font-size:12px' : 'var(--bordo)') + '" data-a="elimPacchetto" data-v="' + x.id + '">' +
+          (confermaElim === "p" + x.id || confermaElim === "scelta" + x.id ? 'Annulla?' : ICONA.x) + '</button>' +
           '</div>' +
+          '<button class="vuoto" style="width:100%;margin-top:8px" data-a="trasferisciBper" data-v="' + x.id + '">Trasferisci su BPER</button>' +
+          (confermaElim === "p" + x.id ? '<div style="margin-top:10px;padding:12px;background:var(--fondo);border-radius:8px"><p class="piccola" style="margin:0 0 8px">Come vuoi chiudere questo pacchetto?</p><button class="pieno" style="width:100%;margin-bottom:6px" data-a="recuperaPacchetto" data-v="' + x.id + '">Recupera ' + euro(x.saldo) + ' nel budget</button><button class="vuoto" style="width:100%" data-a="rimuoviPacchetto" data-v="' + x.id + '">Rimuovi senza recuperare (es. nuovo conto)</button></div>' : '') +
           (x.sbloccato > 0 ? '<p class="piccola" style="margin:10px 0 0">Hai sbloccato ' + euro(x.sbloccato) + ': quando li rimetti, questa voce si azzera da sola.</p>' : '') +
           '</div>';
       }
@@ -452,9 +963,9 @@
     h += '</div>';
 
     h += '<div style="display:grid;grid-template-columns:1fr 100px auto;gap:6px;margin-bottom:8px">' +
-      '<input id="pacNome" value="' + esc(bozza.pacNome || "") + '" placeholder="Nome del pacchetto" style="background:var(--carta);border-radius:12px">' +
-      '<input id="pacSaldo" inputmode="decimal" value="' + esc(bozza.pacSaldo || "") + '" placeholder="quanto c\'è" style="background:var(--carta);border-radius:12px">' +
-      '<button class="pieno" style="border-radius:12px;padding:0 16px;width:auto" data-a="nuovoPacchetto">' + ICONA.piu + '</button></div>' +
+      '<input id="pacNome" value="' + esc(bozza.pacNome || "") + '" placeholder="Nome del pacchetto" style="background:var(--carta);border-radius:6px">' +
+      '<input id="pacSaldo" inputmode="decimal" value="' + esc(bozza.pacSaldo || "") + '" placeholder="quanto c\'è" style="background:var(--carta);border-radius:6px">' +
+      '<button class="pieno" style="border-radius:6px;padding:0 16px;width:auto" data-a="nuovoPacchetto">' + ICONA.piu + '</button></div>' +
       '<p class="piccola" style="margin:0 4px">Ricopia qui i pacchetti che hai già, con quello che c\'è dentro adesso. Tocca un pacchetto per sbloccare o rimettere: i movimenti finiscono anche nel budget del mese.</p>';
     return h;
   }
@@ -467,19 +978,27 @@
     var h = testata("È arrivato lo stipendio", "vaiHome");
 
     h += '<div class="gruppo largo"><p class="titolo" style="margin-left:0">Dal ' + dataBreve(a.id) + ' a oggi</p>' +
-      '<p style="font-family:var(--serif);font-size:44px;letter-spacing:-.03em;line-height:1;margin:12px 0 8px;color:' +
-      (inTasca < d.cuscinetto ? "var(--rosso)" : "var(--verde)") + '">' + euro(inTasca) + '</p>' +
-      '<p class="nota">' + (inTasca >= d.cuscinetto
+      '<p style="font-family:var(--serif);font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1;margin:12px 0 8px;color:' +
+      (inTasca < d.cuscinetto ? "var(--rosso)" : "var(--verde)") + '">' +
+      (inTasca < 0 ? "− " + euro(Math.abs(inTasca)) : euro(inTasca)) + '</p>' +
+      '<p class="nota">' + (inTasca < 0
+        ? "sei finita sotto di " + euro(Math.abs(inTasca)) + ": il mese nuovo parte già in debito di questa cifra."
+        : inTasca >= d.cuscinetto
         ? "ti sono rimasti. Ne volevi " + euro(d.cuscinetto) + "."
         : "ti sono rimasti, meno dei " + euro(d.cuscinetto) + " che volevi.") + '</p></div>';
 
-    if (d.cuscinetto > 0) h += '<div class="gruppo">' + riga("Rientrano nel mese nuovo", euro(riporto), "var(--giallo)", false, true) + '</div>';
+    if (d.cuscinetto > 0 || riporto < 0) {
+      h += '<div class="gruppo">' + riga(
+        riporto < 0 ? "Pesa sul mese nuovo" : "Rientrano nel mese nuovo",
+        (riporto < 0 ? "− " + euro(Math.abs(riporto)) : euro(riporto)),
+        riporto < 0 ? "var(--rosso)" : "var(--giallo)", false, true) + '</div>';
+    }
 
     if (ecc > 0) {
       h += '<p class="titolo">' + euro(ecc) + ' oltre la soglia</p>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">' +
-        '<button class="pillola' + (dove === "risparmi" ? " on" : "") + '" style="padding:16px 8px;border-radius:14px" data-a="dove" data-v="risparmi">Nei risparmi</button>' +
-        '<button class="pillola' + (dove === "mese" ? " on" : "") + '" style="padding:16px 8px;border-radius:14px" data-a="dove" data-v="mese">Nel mese nuovo</button></div>';
+        '<button class="pillola' + (dove === "risparmi" ? " on" : "") + '" style="padding:16px 8px;border-radius:6px" data-a="dove" data-v="risparmi">Nei risparmi</button>' +
+        '<button class="pillola' + (dove === "mese" ? " on" : "") + '" style="padding:16px 8px;border-radius:6px" data-a="dove" data-v="mese">Nel mese nuovo</button></div>';
     }
 
     h += '<p class="titolo">Quanto è entrato oggi</p><div class="gruppo largo">' + campoCifra("nuovoStip", bozza.nuovoStip) + '</div>';
@@ -489,11 +1008,25 @@
 
   function vistaImpostazioni() {
     var a = attivo();
-    var h = testata("Impostazioni", "vaiHome");
+    var h = testata("Impostazioni", "vaiHome", true);
+    h += '<button class="gruppo medio" data-a="vaiConti" style="width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;border:1px solid var(--bordo);margin-bottom:18px;padding:16px;background:var(--carta);color:var(--testo)"><span><b style="display:block;font-size:15px;margin-bottom:5px">Gestione conti</b><span class="piccola">Imposta BPER e registra i trasferimenti dai pacchetti</span></span><span aria-hidden="true" style="font-size:22px">→</span></button>';
 
+    var contiCusc = conti();
+    var budgetPrimaCusc = contiCusc ? arr(contiCusc.resta + d.cuscinetto) : 0;
+    var budgetDopoCusc = arr(budgetPrimaCusc - d.cuscinetto);
+    var cuscSuggerito = suggerimentoCuscinetto();
     h += '<p class="titolo">Con quanto vuoi arrivare a fine mese</p><div class="gruppo medio">' +
-      '<input id="cusc" inputmode="decimal" value="' + (d.cuscinetto || "") + '" placeholder="0" style="font-family:var(--serif);font-size:18px"></div>' +
-      '<p class="piccola">Non entra in quello che puoi spendere. Se il mese fila liscio te lo ritrovi intero e rientra nel mese dopo.</p>';
+      '<p class="piccola" style="margin:0 0 8px">Quanto potresti riuscire a conservare, in base ai valori inseriti</p>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding:12px;background:var(--fondo);border-radius:8px">' +
+      '<div><p class="piccola" style="margin:0 0 4px">Cuscinetto suggerito</p><p id="cuscSuggerito" style="font-family:var(--serif);font-size:24px;line-height:1.1;margin:0;color:var(--verde)">' + euro(cuscSuggerito) + '</p></div>' +
+      '<button class="pillola" type="button" data-a="usaCuscSuggerito" style="white-space:nowrap">Usa questo importo</button></div>' +
+      '<input id="cusc" inputmode="decimal" value="' + (d.cuscinetto || "") + '" placeholder="0" style="font-family:var(--serif);font-size:18px">' +
+      '<div style="margin-top:14px;padding:12px 14px;background:var(--verde-chiaro);border-radius:8px">' +
+      '<p class="piccola" style="margin:0 0 5px">Budget spendibile dopo il cuscinetto</p>' +
+      '<p id="cuscBudgetRimanente" style="font-family:var(--serif);font-size:30px;line-height:1.1;margin:0;color:var(--verde)">' + euro(budgetDopoCusc) + '</p>' +
+      '<p id="cuscBudgetMessaggio" class="piccola" style="margin:7px 0 0">' + (budgetDopoCusc < 0 ? 'Il cuscinetto supera il budget disponibile prima dell’accantonamento.' : 'Questo è il budget che rimane disponibile per le spese del ciclo.') + '</p>' +
+      '</div></div>' +
+      '<p class="piccola">Il cuscinetto viene escluso dal budget spendibile. Se il mese fila liscio, te lo ritrovi intero e rientra nel mese dopo. La cifra qui sopra si aggiorna mentre modifichi l’importo.</p>';
 
     h += '<p class="titolo">Stipendio di questo mese</p><div class="gruppo medio">' +
       '<input id="stip" inputmode="decimal" value="' + (a.stipendio || "") + '" style="font-family:var(--serif);font-size:18px"></div>';
@@ -501,24 +1034,33 @@
     h += '<p class="titolo">Spese fisse</p><div class="gruppo">';
     if (!d.fisse.length) h += '<p class="vuota">Nessuna ancora</p>';
     d.fisse.forEach(function (f, i) {
+      var pag = attivo() && (d.pagate || {})[attivo().id] && d.pagate[attivo().id][f.id];
       h += '<div class="riga' + (i === d.fisse.length - 1 ? " ultima" : "") + '">' +
-        '<span>' + esc(f.nome) + (f.giorno ? '<span style="color:var(--muto);font-size:12px;margin-left:6px">il ' + f.giorno + '</span>' : '') + '</span>' +
+        '<span>' + esc(f.nome) + (f.giorno ? '<span style="color:var(--muto);font-size:12px;margin-left:6px">il ' + f.giorno + '</span>' : '') +
+        (pag ? '<span class="tag">pagata</span>' : '') + '</span>' +
         '<span class="destra"><span style="color:var(--muto)">' + euro(f.importo) + '</span>' +
-        '<button class="x" data-a="elimFissa" data-v="' + f.id + '">' + ICONA.x + '</button></span></div>';
+        '<button class="x' + (confermaElim === "f" + f.id ? ' chiedi' : '') + '" data-a="elimFissa" data-v="' + f.id + '">' +
+        (confermaElim === "f" + f.id ? 'elimino?' : ICONA.x) + '</button></span></div>';
     });
     h += '</div>';
 
     h += '<div style="display:grid;grid-template-columns:1fr 78px 68px auto;gap:6px;margin-bottom:8px">' +
-      '<input id="fNome" value="' + esc(bozza.fNome || "") + '" placeholder="Affitto" style="background:var(--carta);border-radius:12px">' +
-      '<input id="fImp" inputmode="decimal" value="' + esc(bozza.fImp || "") + '" placeholder="€" style="background:var(--carta);border-radius:12px">' +
-      '<input id="fGio" inputmode="numeric" value="' + esc(bozza.fGio || "") + '" placeholder="gg" style="background:var(--carta);border-radius:12px">' +
-      '<button class="pieno" style="border-radius:12px;padding:0 16px;width:auto" data-a="nuovaFissa">' + ICONA.piu + '</button></div>' +
+      '<input id="fNome" value="' + esc(bozza.fNome || "") + '" placeholder="Affitto" style="background:var(--carta);border-radius:6px">' +
+      '<input id="fImp" inputmode="decimal" value="' + esc(bozza.fImp || "") + '" placeholder="€" style="background:var(--carta);border-radius:6px">' +
+      '<input id="fGio" inputmode="numeric" value="' + esc(bozza.fGio || "") + '" placeholder="gg" style="background:var(--carta);border-radius:6px">' +
+      '<button class="pieno" style="border-radius:6px;padding:0 16px;width:auto" data-a="nuovaFissa">' + ICONA.piu + '</button></div>' +
       '<p class="piccola" style="margin:0 4px 20px">In tutto ' + euro(d.fisse.reduce(function (s, f) { return s + f.importo; }, 0)) +
       '. Il giorno è facoltativo e serve a ricordarti cosa deve ancora uscire.</p>';
 
-    h += '<p class="titolo">Copia di sicurezza</p><div class="gruppo medio">' +
-      '<textarea id="backup" readonly style="height:80px;font-family:monospace;color:var(--muto)">' + esc(JSON.stringify(d)) + '</textarea></div>' +
-      '<p class="piccola">Tocca per selezionare e copiare. I dati stanno solo su questo dispositivo.</p>';
+    h += '<p class="titolo">Copia di sicurezza</p>' +
+      '<div class="due" style="grid-template-columns:1fr 1fr;margin-bottom:8px">' +
+      '<button class="pieno" data-a="copiaBackup">' + (bozza.copiato ? "Copiato" : "Copia") + '</button>' +
+      '<button class="vuoto" data-a="scaricaBackup">Scarica</button></div>' +
+      '<button class="vuoto" style="width:100%;margin-bottom:8px" data-a="scaricaCsv">Esporta in CSV</button>' +
+      '<p class="piccola">Il CSV si apre in Excel o Numbers. Il backup serve a rimettere i dati su un altro dispositivo.</p>' +
+      '<div class="gruppo medio">' +
+      '<textarea id="backup" readonly style="height:70px;font-family:monospace;color:var(--muto)">' + esc(JSON.stringify(d)) + '</textarea></div>' +
+      '<p class="piccola">Se la copia non funziona, selezionalo a mano da qui. I dati stanno solo su questo dispositivo.</p>';
 
     h += '<p class="titolo">Ripristina da una copia</p><div class="gruppo medio">' +
       '<textarea id="ripristino" style="height:70px;font-family:var(--sans)" placeholder="Incolla qui la copia fatta sull\'altro dispositivo">' + esc(bozza.ripristino || "") + '</textarea></div>';
@@ -529,12 +1071,69 @@
     return h;
   }
 
+  // Stima il saldo BPER dopo gli impegni previsti nel mese corrente.
+  // Il saldo effettivo resta invariato: questa è solo una proiezione informativa.
+  function saldoBperPrevisto() {
+    var b = d.contoBper || {};
+    if (b.saldo == null) return null;
+    var oggi = new Date();
+    var mese = oggi.getMonth();
+    var anno = oggi.getFullYear();
+    var pac = Math.max(0, Number(b.pacMensile) || 0);
+    var fee = Math.max(0, Number(b.commissioni) || 0);
+    var freq = b.frequenzaSpesa || "mensile";
+    var spesaQuestoMese = freq === "mensile" ||
+      (freq === "trimestrale" && mese % 3 === 0) ||
+      (freq === "semestrale" && mese % 6 === 0) ||
+      (freq === "annuale" && mese === 0);
+    return arr(Number(b.saldo) - pac - (spesaQuestoMese ? fee : 0));
+  }
+
+  function vistaConti() {
+    var ca = d.contoAttuale || { nome: "Conto attuale", saldo: null, movimenti: [] };
+    var b = d.contoBper || { nome: "BPER", saldo: null, pacMensile: null, commissioni: null, movimenti: [] };
+    var movAtt = Array.isArray(ca.movimenti) ? ca.movimenti : [];
+    var movBper = Array.isArray(b.movimenti) ? b.movimenti : [];
+    var h = testata("Gestione conti", "vaiHome", true);
+    h += '<p class="piccola">I saldi dei conti sono separati dal budget spendibile: configurare un saldo qui non modifica il budget mensile.</p>';
+    h += '<div class="gruppo largo"><p class="titolo" style="margin:0 0 8px">Conto attuale</p>' +
+      '<p class="piccola" style="margin:0 0 14px">Per le spese fisse e la gestione quotidiana. Puoi lasciare il saldo vuoto e configurarlo più avanti.</p>' +
+      '<p class="piccola" style="margin:0 0 4px">Saldo registrato</p><p style="font-family:var(--serif);font-size:30px;line-height:1.1;margin:0 0 16px;color:' + (ca.saldo == null ? 'var(--testo-2)' : 'var(--testo)') + '">' + (ca.saldo == null ? 'Non impostato' : euro(ca.saldo)) + '</p>' +
+      '<label class="piccola" for="contoAttualeSaldo" style="display:block;margin-bottom:6px">Saldo attuale (facoltativo)</label><input id="contoAttualeSaldo" inputmode="decimal" value="' + (ca.saldo == null ? '' : esc(String(ca.saldo).replace('.', ','))) + '" placeholder="Lascia vuoto per ora" style="background:var(--carta);border-radius:8px;margin-bottom:12px;width:100%">' +
+      '<button class="pieno" data-a="salvaConti">Salva saldo</button></div>';
+    h += '<p class="titolo">Movimenti · Conto attuale</p><div class="gruppo">';
+    if (!movAtt.length) h += '<p class="vuota">Nessun movimento registrato. Il saldo può restare non configurato finché non vorrai inserirlo.</p>';
+    movAtt.slice().reverse().forEach(function (m) {
+      h += '<div class="conto-movimento"><span>' + esc(m.nota || 'Movimento') + '<span style="display:block;color:var(--muto);font-size:11px;margin-top:3px">' + esc(m.data || '') + '</span></span><span style="white-space:nowrap;color:' + (m.tipo === 'uscita' ? 'var(--rosso)' : 'var(--verde)') + '">' + (m.tipo === 'uscita' ? '−' : '+') + euro(m.importo) + '</span></div>';
+    });
+    h += '</div>';
+    h += '<div class="gruppo largo"><p class="titolo" style="margin:0 0 8px">BPER</p>' +
+      '<p class="piccola" style="margin:0 0 14px">Qui ti basta aggiornare il saldo reale BPER e le spese fisse previste del conto. Questi valori non modificano il budget personale.</p>' +
+      '<p class="piccola" style="margin:0 0 4px">Saldo registrato</p><p style="font-family:var(--serif);font-size:30px;line-height:1.1;margin:0 0 16px;color:' + (b.saldo == null ? 'var(--testo-2)' : 'var(--verde)') + '">' + (b.saldo == null ? 'Non impostato' : euro(b.saldo)) + '</p>' +
+      '<label class="piccola" for="bperSaldo" style="display:block;margin-bottom:6px">Saldo effettivo BPER</label><input id="bperSaldo" inputmode="decimal" value="' + (b.saldo == null ? '' : esc(String(b.saldo).replace('.', ','))) + '" placeholder="Inserisci il saldo attuale" style="background:var(--carta);border-radius:8px;margin-bottom:14px;width:100%">' +
+      '<p class="titolo" style="font-size:15px;margin:0 0 8px">PAC</p>' +
+      '<label class="piccola" for="bperPac" style="display:block;margin-bottom:6px">Importo da investire ogni mese, che esce dal saldo</label><input id="bperPac" inputmode="decimal" value="' + (b.pacMensile == null ? '' : esc(String(b.pacMensile).replace('.', ','))) + '" placeholder="Es. 100" style="background:var(--carta);border-radius:8px;margin-bottom:14px;width:100%">' +
+      '<p class="titolo" style="font-size:15px;margin:0 0 8px">Spese fisse</p>' +
+      '<label class="piccola" for="bperFee" style="display:block;margin-bottom:6px">Importo della spesa fissa</label><input id="bperFee" inputmode="decimal" value="' + (b.commissioni == null ? '' : esc(String(b.commissioni).replace('.', ','))) + '" placeholder="Es. 12,50" style="background:var(--carta);border-radius:8px;margin-bottom:12px;width:100%">' +
+      '<label class="piccola" for="bperFeeFreq" style="display:block;margin-bottom:6px">Frequenza della spesa</label><select id="bperFeeFreq" style="width:100%;padding:12px;border:1px solid var(--bordo);border-radius:8px;background:var(--carta);margin-bottom:14px"><option value="mensile"' + ((b.frequenzaSpesa || 'mensile') === 'mensile' ? ' selected' : '') + '>Ogni mese</option><option value="trimestrale"' + (b.frequenzaSpesa === 'trimestrale' ? ' selected' : '') + '>Ogni 3 mesi</option><option value="semestrale"' + (b.frequenzaSpesa === 'semestrale' ? ' selected' : '') + '>Ogni 6 mesi</option><option value="annuale"' + (b.frequenzaSpesa === 'annuale' ? ' selected' : '') + '>Una volta l’anno</option></select>' +
+      '<button class="pieno" data-a="salvaConti">Salva saldo e spese fisse</button>' +
+      '<p class="piccola" style="margin:10px 0 0">A ogni nuovo ciclo il saldo cala del PAC e, quando scade, della spesa fissa. La prima spesa esce alla prima chiusura e poi segue la cadenza scelta. Non c\'è collegamento con la banca: le altre operazioni vanno aggiornate a mano qui.</p></div>';
+    h += '<button class="vuoto" style="width:100%;margin-bottom:20px" data-a="vaiHome">Torna alla Home</button>';
+    return h;
+  }
+
   // ---- render ----
   function render() {
     var app = document.getElementById("app");
     var attivoEl = document.activeElement;
     var idFocus = attivoEl && attivoEl.id ? attivoEl.id : null;
     var pos = idFocus && attivoEl.selectionStart != null ? attivoEl.selectionStart : null;
+    // Conserva i pannelli <details> aperti quando un'azione aggiorna la schermata.
+    // Senza questo passaggio, il render sostituisce l'HTML e richiude tutto.
+    var vistaPrecedente = vista;
+    var dettagliAperti = Array.prototype.map.call(app.querySelectorAll("details"), function (el, i) {
+      return el.open ? i : -1;
+    }).filter(function (i) { return i >= 0; });
 
     var corpo;
     if (!attivo()) { corpo = vistaPrimoAvvio(); vista = "home"; }
@@ -543,10 +1142,19 @@
     else if (vista === "pacchetti") corpo = vistaPacchetti();
     else if (vista === "nuovoMese") corpo = vistaNuovoMese();
     else if (vista === "impostazioni") corpo = vistaImpostazioni();
+    else if (vista === "conti") corpo = vistaConti();
     else corpo = vistaHome();
 
-    app.className = (vista === "home" || vista === "aggiungi" || vista === "nuovoMese") ? "con-barra" : "";
-    app.innerHTML = (avviso ? '<div class="avviso">' + esc(avviso) + '</div>' : "") + corpo;
+    var conNav = ["home", "elenco", "pacchetti", "impostazioni", "conti"].indexOf(vista) !== -1 && attivo();
+    var conAzione = vista === "aggiungi" || vista === "nuovoMese";
+    app.className = conNav ? "con-barra" : (conAzione ? "con-azione" : "");
+    app.innerHTML = (avviso ? '<div class="avviso">' + esc(avviso) + '</div>' : "") + corpo +
+      (conNav ? navigazione() : "");
+    if (vista === vistaPrecedente) {
+      Array.prototype.forEach.call(app.querySelectorAll("details"), function (el, i) {
+        if (dettagliAperti.indexOf(i) !== -1) el.open = true;
+      });
+    }
 
     if (idFocus) {
       var el = document.getElementById(idFocus);
@@ -557,6 +1165,50 @@
   // ---- azioni ----
   function leggi(id) { var el = document.getElementById(id); return el ? el.value : ""; }
 
+  function chiudiPacchetto(v, recuperaNelBudget) {
+    var pac = (d.pacchetti || []).filter(function (x) { return String(x.id) === String(v); })[0];
+    if (!pac) { pacchettoAperto = null; confermaElim = null; return render(); }
+    var saldoResiduo = arr(Math.max(0, Number(pac.saldo) || 0));
+
+    if (recuperaNelBudget && saldoResiduo > 0) {
+      var quotaAccantonata = arr(Math.min(saldoResiduo, Math.max(0, Number(pac.quotaAccantonataResidua) || 0)));
+      var cicloCorrente = attivo();
+      var cicloOrigine = pac.cicloAccantonamento
+        ? (d.cicli || []).filter(function (x) { return x.id === pac.cicloAccantonamento; })[0]
+        : null;
+      var puoStornareAccantonamento = !!(cicloCorrente && !cicloCorrente.chiuso && cicloOrigine && cicloCorrente.id === cicloOrigine.id);
+
+      if (cicloCorrente) {
+        var quotaDaStornare = puoStornareAccantonamento ? quotaAccantonata : 0;
+        var extraDaRipristinare = arr(saldoResiduo - quotaDaStornare);
+        if (quotaDaStornare > 0) {
+          d.cicli = d.cicli.map(function (x) {
+            if (x.id !== cicloCorrente.id) return x;
+            return Object.assign({}, x, {
+              risparmio: arr(Math.max(0, (Number(x.risparmio) || 0) - quotaDaStornare)),
+              allocatoPacchetti: arr(Math.max(0, (Number(x.allocatoPacchetti) || 0) - quotaDaStornare))
+            });
+          });
+        }
+        if (extraDaRipristinare > 0) {
+          d.entrate.push({
+            id: Date.now(), importo: extraDaRipristinare,
+            nota: "Saldo ripristinato eliminando " + pac.nome,
+            ciclo: cicloCorrente.id, categoria: null
+          });
+        }
+      }
+    }
+
+    d.pacchetti = (d.pacchetti || []).filter(function (x) { return String(x.id) !== String(v); });
+    pacchettoAperto = null;
+    confermaElim = null;
+    avviso = recuperaNelBudget
+      ? (saldoResiduo > 0 ? "Pacchetto eliminato: " + euro(saldoResiduo) + " recuperati nel budget disponibile." : "Pacchetto eliminato.")
+      : (saldoResiduo > 0 ? "Pacchetto rimosso dai risparmi gestiti: il budget disponibile non è aumentato." : "Pacchetto eliminato.");
+    salva();
+  }
+
   var azioni = {
     vaiHome: function () { vista = "home"; spesaAperta = null; pacchettoAperto = null; render(); },
     vaiAggiungi: function () { vista = "aggiungi"; bozza.importo = ""; bozza.nota = ""; categoria = "Varie"; render(); },
@@ -564,6 +1216,31 @@
     vaiPacchetti: function () { vista = "pacchetti"; render(); },
     vaiNuovoMese: function () { vista = "nuovoMese"; bozza.nuovoStip = ""; render(); },
     vaiImpostazioni: function () { vista = "impostazioni"; render(); },
+    vaiConti: function () { vista = "conti"; render(); },
+
+    salvaConti: function () {
+      var caRaw = leggi("contoAttualeSaldo").trim();
+      var saldoRaw = leggi("bperSaldo").trim();
+      var pacRaw = leggi("bperPac").trim();
+      var feeRaw = leggi("bperFee").trim();
+      var feeFreq = leggi("bperFeeFreq") || "mensile";
+      var ca = d.contoAttuale || { nome: "Conto attuale", saldo: null, movimenti: [] };
+      ca.nome = "Conto attuale";
+      ca.saldo = caRaw === "" ? null : arr(num(caRaw));
+      if (!Array.isArray(ca.movimenti)) ca.movimenti = [];
+      d.contoAttuale = ca;
+      var b = d.contoBper || { nome: "BPER", saldo: null, pacMensile: null, commissioni: null, movimenti: [] };
+      b.saldo = saldoRaw === "" ? null : arr(num(saldoRaw));
+      b.pacMensile = pacRaw === "" ? null : arr(num(pacRaw));
+      b.commissioni = feeRaw === "" ? null : arr(num(feeRaw));
+      b.frequenzaSpesa = feeFreq;
+      b.ultimoCicloAddebitato = Math.max(0, (d.cicli || []).filter(function (x) { return x.chiuso; }).length);
+      b.nome = "BPER";
+      if (!Array.isArray(b.movimenti)) b.movimenti = [];
+      d.contoBper = b;
+      avviso = "Impostazioni dei conti salvate. Il budget mensile non è stato modificato.";
+      salva();
+    },
     tipoSpesa: function () { tipo = "spesa"; render(); },
     tipoEntrata: function () { tipo = "entrata"; render(); },
     cat: function (v) { categoria = v; render(); },
@@ -580,16 +1257,55 @@
       var n = num(leggi("imp"));
       if (n <= 0) return;
       var a = attivo();
-      var voce = { id: Date.now(), importo: arr(n), nota: leggi("nota").trim(), ciclo: a.id };
+      var voce = { id: Date.now(), importo: arr(n), nota: leggi("nota").trim(), ciclo: a.id, data: oggiISO() };
       if (tipo === "spesa") { voce.categoria = categoria; d.spese.push(voce); }
       else d.entrate.push(voce);
       bozza.importo = ""; bozza.nota = ""; categoria = "Varie"; vista = "home"; salva();
     },
 
-    elimSpesa: function (v) { d.spese = d.spese.filter(function (x) { return String(x.id) !== v; }); salva(); },
-    elimEntrata: function (v) { d.entrate = d.entrate.filter(function (x) { return String(x.id) !== v; }); salva(); },
-    elimFissa: function (v) { d.fisse = d.fisse.filter(function (x) { return String(x.id) !== v; }); salva(); },
-    apriSpesa: function (v) { spesaAperta = spesaAperta === Number(v) ? null : Number(v); render(); },
+    elimSpesa: function (v) {
+      if (confermaElim !== "s" + v) { confermaElim = "s" + v; return render(); }
+      d.spese = d.spese.filter(function (x) { return String(x.id) !== v; });
+      confermaElim = null; inModifica = null; salva();
+    },
+    elimEntrata: function (v) {
+      if (confermaElim !== "e" + v) { confermaElim = "e" + v; return render(); }
+      d.entrate = d.entrate.filter(function (x) { return String(x.id) !== v; });
+      confermaElim = null; salva();
+    },
+    elimFissa: function (v) {
+      if (confermaElim !== "f" + v) { confermaElim = "f" + v; return render(); }
+      d.fisse = d.fisse.filter(function (x) { return String(x.id) !== v; });
+      confermaElim = null; salva();
+    },
+    apriSpesa: function (v) { spesaAperta = spesaAperta === Number(v) ? null : Number(v); confermaElim = null; render(); },
+    pagaFissa: function (v) {
+      var a = attivo();
+      if (!a) return;
+      if (!d.pagate) d.pagate = {};
+      var c = d.pagate[a.id] ? Object.assign({}, d.pagate[a.id]) : {};
+      if (c[v]) delete c[v]; else c[v] = true;
+      d.pagate = Object.assign({}, d.pagate, {});
+      d.pagate[a.id] = c;
+      salva();
+    },
+    apriCategoria: function (v) { categoriaAperta = categoriaAperta === v ? null : v; spesaAperta = null; render(); },
+    modifica: function (v) {
+      inModifica = inModifica === Number(v) ? null : Number(v);
+      confermaElim = null; render();
+    },
+    salvaModifica: function (v) {
+      var n = num(leggi("mImp"));
+      if (n <= 0) { avviso = "L'importo deve essere maggiore di zero."; return render(); }
+      var nuovaData = leggi("mData");
+      d.spese = d.spese.map(function (x) {
+        if (String(x.id) !== v) return x;
+        var agg = Object.assign({}, x, { importo: arr(n), nota: leggi("mNota").trim() });
+        if (nuovaData) agg.data = nuovaData;
+        return agg;
+      });
+      inModifica = null; spesaAperta = null; avviso = null; salva();
+    },
     setCat: function (v, c) {
       d.spese = d.spese.map(function (x) { return String(x.id) === v ? Object.assign({}, x, { categoria: c }) : x; });
       spesaAperta = null; salva();
@@ -610,29 +1326,96 @@
       bozza.pacNome = ""; bozza.pacSaldo = ""; salva();
     },
     elimPacchetto: function (v) {
-      d.pacchetti = (d.pacchetti || []).filter(function (x) { return String(x.id) !== v; });
-      pacchettoAperto = null; salva();
+      if (confermaElim !== "p" + v) {
+        confermaElim = "p" + v;
+        return render();
+      }
+      // Il secondo tap sul pulsante di chiusura annulla la scelta.
+      confermaElim = null;
+      salva();
     },
+    recuperaPacchetto: function (v) { chiudiPacchetto(v, true); },
+    rimuoviPacchetto: function (v) { chiudiPacchetto(v, false); },
     sblocca: function (v) { muovi(v, "sblocca"); },
     rimetti: function (v) { muovi(v, "rimetti"); },
+    trasferisciBper: function (v) { muovi(v, "trasferisciBper"); },
+    usaCuscSuggerito: function () {
+      var suggerito = suggerimentoCuscinetto();
+      d.cuscinetto = suggerito;
+      var campo = document.getElementById("cusc");
+      if (campo) campo.value = String(secco(suggerito));
+      scriviSoltanto();
+      aggiornaBudgetCuscinetto();
+    },
+    accantonaAuto: function () {
+      var n = arr(num(leggi("autoImporto")));
+      var nome = String(leggi("autoNomePacchetto") || "").trim();
+      var a = attivo(), c = conti();
+      if (!a || a.chiuso) { avviso = "Non c’è un ciclo stipendio aperto."; return render(); }
+      if (n <= 0) { avviso = "Inserisci un importo maggiore di zero."; return render(); }
+      if (n > c.resta) { avviso = "L’importo supera il budget spendibile (" + euro(Math.max(0, c.resta)) + ")."; return render(); }
+      if (!nome) { avviso = "Dai un nome al nuovo pacchetto."; return render(); }
+      // Crea un pacchetto dedicato e registra lo stesso importo come risparmio del ciclo.
+      // allocatoPacchetti evita che questa somma venga conteggiata due volte alla chiusura.
+      d.pacchetti = (d.pacchetti || []).concat([{ id: Date.now(), nome: nome, saldo: n, sbloccato: 0, cicloAccantonamento: a.id, quotaAccantonataResidua: n }]);
+      d.cicli = d.cicli.map(function (x) {
+        return x.id === a.id ? Object.assign({}, x, {
+          risparmio: arr((Number(x.risparmio) || 0) + n),
+          allocatoPacchetti: arr((Number(x.allocatoPacchetti) || 0) + n)
+        }) : x;
+      });
+      bozza.autoNomePacchetto = "";
+      avviso = "Accantonamento registrato e nuovo pacchetto creato.";
+      salva();
+    },
 
     chiudiMese: function () {
       var s = num(leggi("nuovoStip"));
       if (s <= 0) return;
       var a = attivo(), c = conti();
+      if (a.chiuso) { avviso = "Questo mese è già chiuso."; return render(); }
+      // due cicli non possono condividere l'id, o le spese si mescolerebbero
+      var nuovoId = oggiISO(), n = 1;
+      while (d.cicli.some(function (x) { return x.id === nuovoId; })) { nuovoId = oggiISO() + "." + (++n); }
       var inTasca = c.inTasca;
       var riporto = Math.min(inTasca, d.cuscinetto);
       var ecc = arr(inTasca - riporto);
-      d.risparmiTotali = arr(d.risparmiTotali + a.risparmio + (dove === "risparmi" ? ecc : 0));
+      var risparmioNonAllocato = Math.max(0, arr((Number(a.risparmio) || 0) - (Number(a.allocatoPacchetti) || 0)));
+      d.risparmiTotali = arr(d.risparmiTotali + risparmioNonAllocato + (dove === "risparmi" ? ecc : 0));
       d.cicli = d.cicli.map(function (x) {
         return x.id === a.id ? Object.assign({}, x, { chiuso: true, fine: oggiISO(), inTasca: inTasca, riporto: riporto, eccedenza: ecc, dove: dove }) : x;
       });
       d.cicli.push({
-        id: oggiISO(), stipendio: arr(s),
+        id: nuovoId, stipendio: arr(s),
         riporto: arr(riporto + (dove === "mese" ? ecc : 0)),
         risparmio: 0, chiuso: false
       });
+      applicaImpegniBperNuovoCiclo();
       bozza.nuovoStip = ""; dove = "risparmi"; vista = "home"; salva();
+    },
+
+    scaricaCsv: function () {
+      if (!scarica("budget-" + oggiISO() + ".csv", "\ufeff" + csv(), "text/csv")) {
+        avviso = "Il telefono non ha permesso il download: usa la copia di sicurezza qui sotto.";
+        render();
+      }
+    },
+    scaricaBackup: function () {
+      if (!scarica("budget-backup-" + oggiISO() + ".json", JSON.stringify(d), "application/json")) {
+        avviso = "Il telefono non ha permesso il download: copia il testo qui sotto.";
+        render();
+      }
+    },
+    copiaBackup: function () {
+      var testo = JSON.stringify(d);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(testo).then(function () {
+          avviso = null; bozza.copiato = true; render();
+          setTimeout(function () { bozza.copiato = false; render(); }, 2000);
+        }, function () { avviso = "Non sono riuscita a copiare: seleziona il testo a mano."; render(); });
+      } else {
+        avviso = "Copia non disponibile: seleziona il testo a mano."; render();
+      }
     },
 
     ripristina: function () {
@@ -647,18 +1430,53 @@
   };
 
   function muovi(idPacchetto, verso) {
-    var n = num(leggi("mov"));
-    if (n <= 0) return;
+    var n = arr(num(leggi("mov")));
+    if (n <= 0) { avviso = "Inserisci un importo maggiore di zero."; return render(); }
     var a = attivo();
-    var pac = (d.pacchetti || []).filter(function (x) { return String(x.id) === idPacchetto; })[0];
+    var pac = (d.pacchetti || []).filter(function (x) { return String(x.id) === String(idPacchetto); })[0];
     if (!pac) return;
+    if ((verso === "sblocca" || verso === "trasferisciBper") && n > pac.saldo) {
+      avviso = "In " + pac.nome + " ci sono " + euro(pac.saldo) + ": non puoi spostarne di più.";
+      return render();
+    }
+    if (verso === "trasferisciBper") {
+      var b = d.contoBper || { nome: "BPER", saldo: null, pacMensile: null, commissioni: null, movimenti: [] };
+      if (!Array.isArray(b.movimenti)) b.movimenti = [];
+      // Se il saldo iniziale è sconosciuto, registra il movimento senza inventare il saldo complessivo.
+      if (b.saldo != null) b.saldo = arr((Number(b.saldo) || 0) + n);
+      b.movimenti.push({ id: Date.now(), data: oggiISO(), tipo: "entrata", importo: n, nota: "Trasferimento dal pacchetto " + pac.nome });
+      d.contoBper = b;
+      d.pacchetti = d.pacchetti.map(function (x) {
+        if (String(x.id) !== String(idPacchetto)) return x;
+        var quotaResidua = Math.max(0, Number(x.quotaAccantonataResidua) || 0);
+        // il denaro cambia solo posto: resta tuo, quindi non va fra i soldi da rimettere
+        return Object.assign({}, x, {
+          saldo: arr(x.saldo - n),
+          quotaAccantonataResidua: arr(Math.max(0, quotaResidua - Math.min(n, quotaResidua)))
+        });
+      });
+      bozza.mov = "";
+      avviso = euro(n) + " registrati come trasferiti da “" + pac.nome + "” a BPER. Il budget mensile non cambia; esegui il bonifico dalla tua banca separatamente.";
+      salva();
+      return;
+    }
+    if (verso === "sblocca" && n > pac.saldo) {
+      avviso = "In " + pac.nome + " ci sono " + euro(pac.saldo) + ": non puoi sbloccarne di più.";
+      return render();
+    }
     d.pacchetti = d.pacchetti.map(function (x) {
-      if (String(x.id) !== idPacchetto) return x;
-      if (verso === "sblocca") return Object.assign({}, x, { saldo: arr(x.saldo - n), sbloccato: arr((x.sbloccato || 0) + n) });
+      if (String(x.id) !== String(idPacchetto)) return x;
+      if (verso === "sblocca") {
+        var quotaResidua = Math.max(0, Number(x.quotaAccantonataResidua) || 0);
+        return Object.assign({}, x, {
+          saldo: arr(x.saldo - n),
+          sbloccato: arr((x.sbloccato || 0) + n),
+          quotaAccantonataResidua: arr(Math.max(0, quotaResidua - Math.min(n, quotaResidua)))
+        });
+      }
       var copre = Math.min(n, x.sbloccato || 0);
       return Object.assign({}, x, { saldo: arr(x.saldo + n), sbloccato: arr((x.sbloccato || 0) - copre) });
     });
-    // i soldi si muovono davvero sul conto: il budget del mese deve vederli
     var voce = {
       id: Date.now(), importo: arr(n),
       nota: (verso === "sblocca" ? "Sbloccato da " : "Rimesso in ") + pac.nome,
@@ -666,6 +1484,60 @@
     };
     if (verso === "sblocca") d.entrate.push(voce); else d.spese.push(voce);
     bozza.mov = ""; salva();
+  }
+
+  function aggiornaPrevisioneHome() {
+    var output = document.getElementById("previsioneFineCiclo");
+    var messaggio = document.getElementById("previsioneFineCicloMessaggio");
+    var dettagli = document.getElementById("previsioneFineCicloDettagli");
+    var c = conti();
+    if (!output || !c) return;
+    var previsione = previsioneFineCiclo();
+    output.textContent = euro(previsione.previsto);
+    output.style.color = previsione.previsto < 0 ? "var(--rosso)" : "var(--verde)";
+    if (messaggio) messaggio.textContent = previsione.previsto < 0
+      ? "Con l’andamento attuale potresti superare il budget prima del prossimo stipendio."
+      : "Saldo spendibile che potresti conservare al prossimo stipendio, se le spese continuano con questo andamento.";
+    if (dettagli) dettagli.textContent = previsione.affidabile
+      ? "Media spese registrate: " + euro(previsione.mediaGiornaliera) + " al giorno · " + previsione.giorni + (previsione.giorni === 1 ? " giorno" : " giorni") + " rimanenti"
+      : "Stima provvisoria: registra alcune spese e lascia passare almeno 3 giorni del ciclo per ottenere una previsione più utile.";
+  }
+
+  function aggiornaBudgetCuscinetto() {
+    var valore = document.getElementById("cusc");
+    var output = document.getElementById("cuscBudgetRimanente");
+    var messaggio = document.getElementById("cuscBudgetMessaggio");
+    var suggeritoOutput = document.getElementById("cuscSuggerito");
+    var c = conti();
+    if (!valore || !output || !c) return;
+    // conti().resta include già il cuscinetto salvato in d; lo riaggiungiamo
+    // per ricostruire il budget prima del cuscinetto, poi sottraiamo il valore digitato.
+    var residuo = arr(c.resta + d.cuscinetto - num(valore.value));
+    if (suggeritoOutput) {
+      suggeritoOutput.textContent = secco(suggerimentoCuscinetto()) + " €";
+    }
+    output.textContent = euro(residuo);
+    if (messaggio) {
+      messaggio.textContent = residuo < 0
+        ? "Il cuscinetto supera il budget disponibile prima dell’accantonamento."
+        : "Questo è il budget che rimane disponibile per le spese del ciclo.";
+      messaggio.style.color = residuo < 0 ? "var(--rosso)" : "var(--testo-2)";
+    }
+  }
+
+  function aggiornaBudgetAccantonamento() {
+    var valore = document.getElementById("autoImporto");
+    var output = document.getElementById("autoBudgetRimanente");
+    var messaggio = document.getElementById("autoBudgetMessaggio");
+    if (!valore || !output) return;
+    var residuo = arr(conti().resta - num(valore.value));
+    output.textContent = euro(residuo);
+    if (messaggio) {
+      messaggio.textContent = residuo < 0
+        ? "L’importo supera il budget disponibile. Riducilo prima di confermare."
+        : "Questa cifra resterebbe disponibile per il resto del ciclo.";
+      messaggio.style.color = residuo < 0 ? "var(--rosso)" : "var(--testo-2)";
+    }
   }
 
   // ---- eventi ----
@@ -683,17 +1555,23 @@
       var a = attivo();
       d.cicli = d.cicli.map(function (x) { return x.id === a.id ? Object.assign({}, x, { risparmio: arr(num(ev.target.value)) }) : x; });
       scriviSoltanto();
-    } else if (id === "cusc") { d.cuscinetto = num(ev.target.value); scriviSoltanto(); }
+      aggiornaPrevisioneHome();
+    } else if (id === "cusc") { d.cuscinetto = num(ev.target.value); scriviSoltanto(); aggiornaBudgetCuscinetto(); }
     else if (id === "stip") {
       var b = attivo();
       d.cicli = d.cicli.map(function (x) { return x.id === b.id ? Object.assign({}, x, { stipendio: num(ev.target.value) }) : x; });
       scriviSoltanto();
+      aggiornaBudgetCuscinetto();
     }
     else if (id === "imp") { bozza.importo = ev.target.value; render(); }
     else if (id === "nota") bozza.nota = ev.target.value;
     else if (id === "primo") bozza.primo = ev.target.value;
     else if (id === "nuovoStip") bozza.nuovoStip = ev.target.value;
     else if (id === "mov") bozza.mov = ev.target.value;
+    else if (id === "autoImporto") { aggiornaBudgetAccantonamento(); }
+    else if (id === "autoNomePacchetto") bozza.autoNomePacchetto = ev.target.value;
+    else if (id === "contoAttualeSaldo" || id === "bperSaldo" || id === "bperPac" || id === "bperFee" || id === "bperFeeFreq") { /* letti al salvataggio */ }
+    else if (id === "mImp" || id === "mNota" || id === "mData") { /* letti al salvataggio */ }
     else if (id === "fNome") bozza.fNome = ev.target.value;
     else if (id === "fImp") bozza.fImp = ev.target.value;
     else if (id === "fGio") bozza.fGio = ev.target.value.replace(/[^0-9]/g, "").slice(0, 2);
@@ -718,6 +1596,19 @@
   }
 
   document.addEventListener("focusout", function (ev) {
+    if (ev.target.id === "risparmio") {
+      var ciclo = attivo();
+      if (ciclo) {
+        var minimo = Number(ciclo.allocatoPacchetti) || 0;
+        if ((Number(ciclo.risparmio) || 0) < minimo) {
+          d.cicli = d.cicli.map(function (x) {
+            return x.id === ciclo.id ? Object.assign({}, x, { risparmio: minimo }) : x;
+          });
+          try { localStorage.setItem(CHIAVE, JSON.stringify(d)); } catch (e) {}
+          avviso = "Il risparmio mensile non può scendere sotto la somma già assegnata ai pacchetti.";
+        }
+      }
+    }
     if (["risparmio", "cusc", "stip"].indexOf(ev.target.id) !== -1) render();
   });
 
