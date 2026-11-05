@@ -253,11 +253,37 @@
   .fissa.scaduta .fnome small { color: var(--rosso); }
   .fissa.imminente .spunta { border-color: var(--arancio); }
   .fissa.imminente .fnome small { color: var(--arancio-ink); }
+  .arrbtn {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
+    border: 1px solid var(--bordo); border-radius: 4px; padding: 3px 6px;
+    background: var(--carta); color: var(--muto); white-space: nowrap;
+  }
+  .arrbtn.on { border-color: var(--verde); color: var(--verde); }
+
   .tag {
     font-family: var(--mono); font-size: 9px; letter-spacing: .07em; text-transform: uppercase;
     color: var(--verde); border: 1px solid var(--verde); border-radius: 2px;
     padding: 2px 5px; margin-left: 8px; vertical-align: 1px;
   }
+
+  /* interruttore dell'arrotondamento */
+  .arrot {
+    width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+    background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--r);
+    padding: 13px 14px; margin-bottom: 12px; font-size: 14px; color: var(--testo);
+  }
+  .arrot .box {
+    width: 19px; height: 19px; flex: 0 0 19px;
+    border: 1px solid var(--bordo-forte); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .arrot.on { border-color: var(--verde); }
+  .arrot.on .box { background: var(--verde); border-color: var(--verde); }
+  .arrot .testo { display: flex; flex-direction: column; gap: 3px; }
+  .arrot small {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: var(--muto);
+  }
+  .arrot.on small { color: var(--verde); }
 
   .voce .dt {
     font-family: var(--mono); font-size: 10px; color: var(--muto);
@@ -413,12 +439,12 @@
 
   // pagate: { "<id ciclo>": { "<id fissa>": true } } — lo stato vive nel ciclo, non nella fissa,
   // così un ciclo nuovo riparte da sé con tutto "da pagare" senza bisogno di azzeramenti
-  var VUOTO = { fisse: [], cuscinetto: 0, risparmiTotali: 0, cicli: [], spese: [], entrate: [], pacchetti: [], pagate: {}, contoAttuale: { nome: "Conto attuale", saldo: null, movimenti: [] }, contoBper: { nome: "BPER", saldo: null, pacMensile: null, commissioni: null, movimenti: [] } };
+  var VUOTO = { fisse: [], cuscinetto: 0, risparmiTotali: 0, cicli: [], spese: [], entrate: [], pacchetti: [], pagate: {}, salvadanaioId: null, contoAttuale: { nome: "Conto attuale", saldo: null, movimenti: [] }, contoBper: { nome: "BPER", saldo: null, pacMensile: null, commissioni: null, movimenti: [] } };
 
   var d = null, vista = "home", avviso = null;
   var tipo = "spesa", categoria = "Varie";
   var pacchettoAperto = null, spesaAperta = null, dove = "risparmi", categoriaAperta = null;
-  var confermaElim = null, inModifica = null;
+  var confermaElim = null, inModifica = null, arrotonda = false;
   var bozza = {};
 
   // ---- utilità ----
@@ -511,10 +537,10 @@
       avviso = "Non riesco a leggere i dati salvati.";
     }
   }
-  function salva() {
+  function salva(tieniAvviso) {
     try {
       localStorage.setItem(CHIAVE, JSON.stringify(d));
-      avviso = null;
+      if (!tieniAvviso) avviso = null;
     } catch (e) {
       avviso = "Non salvato. Copia il backup dalle impostazioni.";
     }
@@ -526,10 +552,14 @@
   function conti() {
     var a = attivo();
     if (!a) return null;
-    var fisse = d.fisse.reduce(function (s, f) { return s + f.importo; }, 0);
+    // una fissa arrotondata porta via anche il suo resto, quindi il budget lo scala subito
+    var fisse = arr(d.fisse.reduce(function (s, f) {
+      return s + f.importo + (f.arrotonda ? restoArrotondamento(f.importo) : 0);
+    }, 0));
     var entrate = arr(d.entrate.filter(function (e) { return e.ciclo === a.id; }).reduce(function (s, x) { return s + x.importo; }, 0));
     var spese = d.spese.filter(function (s) { return s.ciclo === a.id; });
-    var speso = arr(spese.reduce(function (s, x) { return s + x.importo; }, 0));
+    // dal conto esce la spesa più il resto girato al salvadanaio
+    var speso = arr(spese.reduce(function (s, x) { return s + x.importo + (x.arrotondato || 0); }, 0));
     var budget = arr(a.stipendio + a.riporto + entrate - fisse - d.cuscinetto - a.risparmio);
     var attesa = prossimaAttesa(a.id);
     var durata = Math.max(1, Math.round((attesa - daISO(a.id)) / 86400000));
@@ -563,6 +593,35 @@
       if (a.giorni === null) return 1;
       if (b.giorni === null) return -1;
       return a.giorni - b.giorni;
+    });
+  }
+
+  // quanto manca all'euro successivo: è il resto che finisce nel salvadanaio
+  function restoArrotondamento(n) {
+    var r = arr(Math.ceil(n) - n);
+    return r > 0 && r < 1 ? r : 0;
+  }
+
+  // il pacchetto che raccoglie i resti; se non c'è ancora, lo crea al primo uso
+  function salvadanaio(creaSeManca) {
+    var p = d.pacchetti || [];
+    var trovato = p.filter(function (x) { return String(x.id) === String(d.salvadanaioId); })[0];
+    if (trovato) return trovato;
+    // nessuno designato: se ne esiste già uno che si chiama così, uso quello invece di duplicarlo
+    var perNome = p.filter(function (x) { return /salvadanaio/i.test(x.nome || ""); })[0];
+    if (perNome) { d.salvadanaioId = perNome.id; return perNome; }
+    if (!creaSeManca) return null;
+    var nuovo = { id: Date.now() + 1, nome: "Salvadanaio", saldo: 0, sbloccato: 0 };
+    d.pacchetti = p.concat([nuovo]);
+    d.salvadanaioId = nuovo.id;
+    return nuovo;
+  }
+
+  function versaNelSalvadanaio(quanto) {
+    if (!quanto) return;
+    var s = salvadanaio(true);
+    d.pacchetti = d.pacchetti.map(function (x) {
+      return String(x.id) === String(s.id) ? Object.assign({}, x, { saldo: arr(x.saldo + quanto) }) : x;
     });
   }
 
@@ -733,10 +792,13 @@
 
     if (c.statoFisse.length) {
       var daPagare = c.statoFisse.filter(function (x) { return !x.pagata; });
-      var restanti = arr(daPagare.reduce(function (s, x) { return s + x.f.importo; }, 0));
+      var restanti = arr(daPagare.reduce(function (s, x) {
+        return s + x.f.importo + (x.f.arrotonda ? restoArrotondamento(x.f.importo) : 0);
+      }, 0));
       h += '<p class="titolo">Spese fisse' + (daPagare.length ? ' · ancora ' + euro(restanti) : ' · tutte pagate') + '</p>';
       h += '<div class="gruppo" style="padding:2px 16px">';
       c.statoFisse.forEach(function (x) {
+        var restoF = x.f.arrotonda ? restoArrotondamento(x.f.importo) : 0;
         var quando = x.giorni === null ? ""
           : x.pagata ? ""
           : x.giorni < 0 ? "scaduta"
@@ -747,7 +809,9 @@
           '<span class="spunta">' + (x.pagata ? ICONA.spunta : '') + '</span>' +
           '<span class="fnome">' + esc(x.f.nome) +
           (quando ? '<small>' + quando + '</small>' : '') + '</span>' +
-          '<span class="fimp">' + euro(x.f.importo) + '</span></div>';
+          '<span class="fimp">' + euro(arr(x.f.importo + restoF)) +
+          (restoF ? '<small style="color:var(--verde);font-family:var(--mono);font-size:10px;margin-left:5px">+' + euro(restoF) + ' via</small>' : '') +
+          '</span></div>';
       });
       h += '</div><p class="piccola">Gli importi sono già tolti dal budget qui sopra: la spunta serve solo a ricordarti cosa è uscito dal conto.</p>';
     }
@@ -779,7 +843,24 @@
         esc((CATEGORIE.filter(function (x) { return x.nome === categoria; })[0] || {}).cosa) + '</p>';
     }
 
-    if (n > 0) h += '<p class="nota" style="margin:0 4px 12px">Ti resteranno ' + euro(dopo) + '</p>';
+    if (tipo === "spesa") {
+      var resto = n > 0 ? restoArrotondamento(arr(n)) : 0;
+      h += '<button class="arrot' + (arrotonda ? ' on' : '') + '" data-a="arrotonda">' +
+        '<span class="box">' + (arrotonda ? ICONA.spunta : '') + '</span>' +
+        '<span class="testo">Arrotonda all\'euro' +
+        (arrotonda && n > 0
+          ? '<small>' + (resto > 0
+              ? euro(arr(n)) + ' → ' + euro(Math.ceil(arr(n))) + ', ' + euro(resto) + ' nel salvadanaio'
+              : 'cifra già intera, niente da mettere via') + '</small>'
+          : '<small>il resto va nel salvadanaio</small>') +
+        '</span></button>';
+    }
+
+    if (n > 0) {
+      var scala = tipo === "spesa" && arrotonda ? arr(n + restoArrotondamento(arr(n))) : n;
+      var dopoVero = tipo === "spesa" ? arr(c.resta - scala) : arr(c.resta + n);
+      h += '<p class="nota" style="margin:0 4px 12px">Ti resteranno ' + euro(dopoVero) + '</p>';
+    }
     h += '<div class="fondo-fisso"><div><button class="pieno" data-a="registra">Salva</button></div></div>';
     return h;
   }
@@ -815,7 +896,8 @@
           h += '<div class="voce">' +
             '<span data-a="apriSpesa" data-v="' + s.id + '" style="flex:1;color:' + (s.nota ? 'var(--testo-2)' : 'var(--muto)') + '">' +
             esc(s.nota || "senza nota") +
-            (s.data ? '<small class="dt">' + giornoMese(s.data) + '</small>' : '') + '</span>' +
+            (s.data ? '<small class="dt">' + giornoMese(s.data) + '</small>' : '') +
+            (s.arrotondato ? '<small class="dt" style="color:var(--verde)">+' + euro(s.arrotondato) + ' via</small>' : '') + '</span>' +
             '<span class="destra"><span>' + euro(s.importo) + '</span>' +
             '<button class="x' + (chiedo ? ' chiedi' : '') + '" data-a="elimSpesa" data-v="' + s.id + '">' +
             (chiedo ? 'elimino?' : ICONA.x) + '</button></span></div>';
@@ -953,9 +1035,13 @@
           (confermaElim === "p" + x.id || confermaElim === "scelta" + x.id ? 'var(--rosso);font-size:12px' : 'var(--bordo)') + '" data-a="elimPacchetto" data-v="' + x.id + '">' +
           (confermaElim === "p" + x.id || confermaElim === "scelta" + x.id ? 'Annulla?' : ICONA.x) + '</button>' +
           '</div>' +
-          '<button class="vuoto" style="width:100%;margin-top:8px" data-a="trasferisciBper" data-v="' + x.id + '">Trasferisci su BPER</button>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">' +
+          '<button class="vuoto" data-a="trasferisciBper" data-v="' + x.id + '">Su BPER</button>' +
+          '<button class="vuoto" data-a="correggiSaldo" data-v="' + x.id + '">Correggi saldo</button>' +
+          '</div>' +
           (confermaElim === "p" + x.id ? '<div style="margin-top:10px;padding:12px;background:var(--fondo);border-radius:8px"><p class="piccola" style="margin:0 0 8px">Come vuoi chiudere questo pacchetto?</p><button class="pieno" style="width:100%;margin-bottom:6px" data-a="recuperaPacchetto" data-v="' + x.id + '">Recupera ' + euro(x.saldo) + ' nel budget</button><button class="vuoto" style="width:100%" data-a="rimuoviPacchetto" data-v="' + x.id + '">Rimuovi senza recuperare (es. nuovo conto)</button></div>' : '') +
           (x.sbloccato > 0 ? '<p class="piccola" style="margin:10px 0 0">Hai sbloccato ' + euro(x.sbloccato) + ': quando li rimetti, questa voce si azzera da sola.</p>' : '') +
+          '<p class="piccola" style="margin:10px 0 0">“Correggi saldo” scrive la cifra esatta che c’è dentro adesso, senza toccare il budget del mese: usalo per riallineare, non per registrare un movimento.</p>' +
           '</div>';
       }
       h += '</div>';
@@ -1031,6 +1117,22 @@
     h += '<p class="titolo">Stipendio di questo mese</p><div class="gruppo medio">' +
       '<input id="stip" inputmode="decimal" value="' + (a.stipendio || "") + '" style="font-family:var(--serif);font-size:18px"></div>';
 
+    var pacc = d.pacchetti || [];
+    var sd = salvadanaio(false);
+    h += '<p class="titolo">Salvadanaio degli arrotondamenti</p><div class="gruppo medio">';
+    if (!pacc.length) {
+      h += '<p class="piccola" style="margin:4px 0">Non hai ancora pacchetti: al primo arrotondamento ne creo uno chiamato Salvadanaio.</p>';
+    } else {
+      h += '<select id="scegliSalvadanaio" style="width:100%;padding:12px;border:1px solid var(--bordo);border-radius:8px;background:var(--carta)">';
+      h += '<option value=""' + (sd ? '' : ' selected') + '>Creane uno nuovo al primo uso</option>';
+      pacc.forEach(function (x, i) {
+        var eti = x.nome + " · " + euro(x.saldo) + (pacc.filter(function(y){return y.nome===x.nome;}).length > 1 ? " (" + (i+1) + ")" : "");
+        h += '<option value="' + x.id + '"' + (sd && String(sd.id) === String(x.id) ? ' selected' : '') + '>' + esc(eti) + '</option>';
+      });
+      h += '</select><button class="pieno" style="margin-top:10px" data-a="salvaSalvadanaio">Salva scelta</button>';
+    }
+    h += '</div><p class="piccola">Quando registri una spesa puoi arrotondarla all\'euro: la differenza finisce qui.</p>';
+
     h += '<p class="titolo">Spese fisse</p><div class="gruppo">';
     if (!d.fisse.length) h += '<p class="vuota">Nessuna ancora</p>';
     d.fisse.forEach(function (f, i) {
@@ -1038,7 +1140,10 @@
       h += '<div class="riga' + (i === d.fisse.length - 1 ? " ultima" : "") + '">' +
         '<span>' + esc(f.nome) + (f.giorno ? '<span style="color:var(--muto);font-size:12px;margin-left:6px">il ' + f.giorno + '</span>' : '') +
         (pag ? '<span class="tag">pagata</span>' : '') + '</span>' +
-        '<span class="destra"><span style="color:var(--muto)">' + euro(f.importo) + '</span>' +
+        '<span class="destra">' +
+        '<button class="arrbtn' + (f.arrotonda ? ' on' : '') + '" data-a="arrotondaFissa" data-v="' + f.id + '" title="Arrotonda all\'euro">' +
+        (f.arrotonda ? '+' + euro(restoArrotondamento(f.importo)) : 'arrot.') + '</button>' +
+        '<span style="color:var(--muto)">' + euro(f.importo) + '</span>' +
         '<button class="x' + (confermaElim === "f" + f.id ? ' chiedi' : '') + '" data-a="elimFissa" data-v="' + f.id + '">' +
         (confermaElim === "f" + f.id ? 'elimino?' : ICONA.x) + '</button></span></div>';
     });
@@ -1049,7 +1154,7 @@
       '<input id="fImp" inputmode="decimal" value="' + esc(bozza.fImp || "") + '" placeholder="€" style="background:var(--carta);border-radius:6px">' +
       '<input id="fGio" inputmode="numeric" value="' + esc(bozza.fGio || "") + '" placeholder="gg" style="background:var(--carta);border-radius:6px">' +
       '<button class="pieno" style="border-radius:6px;padding:0 16px;width:auto" data-a="nuovaFissa">' + ICONA.piu + '</button></div>' +
-      '<p class="piccola" style="margin:0 4px 20px">In tutto ' + euro(d.fisse.reduce(function (s, f) { return s + f.importo; }, 0)) +
+      '<p class="piccola" style="margin:0 4px 20px">In tutto ' + euro(arr(d.fisse.reduce(function (s, f) { return s + f.importo + (f.arrotonda ? restoArrotondamento(f.importo) : 0); }, 0))) +
       '. Il giorno è facoltativo e serve a ricordarti cosa deve ancora uscire.</p>';
 
     h += '<p class="titolo">Copia di sicurezza</p>' +
@@ -1244,6 +1349,19 @@
     tipoSpesa: function () { tipo = "spesa"; render(); },
     tipoEntrata: function () { tipo = "entrata"; render(); },
     cat: function (v) { categoria = v; render(); },
+    arrotonda: function () { arrotonda = !arrotonda; render(); },
+    arrotondaFissa: function (v) {
+      d.fisse = d.fisse.map(function (x) {
+        return String(x.id) === String(v) ? Object.assign({}, x, { arrotonda: !x.arrotonda }) : x;
+      });
+      salva();
+    },
+    salvaSalvadanaio: function () {
+      var v = leggi("scegliSalvadanaio");
+      d.salvadanaioId = v ? Number(v) : null;
+      avviso = v ? null : "Al prossimo arrotondamento creo un pacchetto nuovo.";
+      salva();
+    },
     dove: function (v) { dove = v; render(); },
 
     apriPrimo: function () {
@@ -1258,13 +1376,21 @@
       if (n <= 0) return;
       var a = attivo();
       var voce = { id: Date.now(), importo: arr(n), nota: leggi("nota").trim(), ciclo: a.id, data: oggiISO() };
-      if (tipo === "spesa") { voce.categoria = categoria; d.spese.push(voce); }
+      if (tipo === "spesa") {
+        voce.categoria = categoria;
+        var resto = arrotonda ? restoArrotondamento(arr(n)) : 0;
+        if (resto > 0) { voce.arrotondato = resto; versaNelSalvadanaio(resto); }
+        d.spese.push(voce);
+      }
       else d.entrate.push(voce);
-      bozza.importo = ""; bozza.nota = ""; categoria = "Varie"; vista = "home"; salva();
+      bozza.importo = ""; bozza.nota = ""; categoria = "Varie"; arrotonda = false; vista = "home"; salva();
     },
 
     elimSpesa: function (v) {
       if (confermaElim !== "s" + v) { confermaElim = "s" + v; return render(); }
+      // se la spesa aveva un resto versato, lo riprendo dal salvadanaio
+      var sp = d.spese.filter(function (x) { return String(x.id) === v; })[0];
+      if (sp && sp.arrotondato) versaNelSalvadanaio(-sp.arrotondato);
       d.spese = d.spese.filter(function (x) { return String(x.id) !== v; });
       confermaElim = null; inModifica = null; salva();
     },
@@ -1284,7 +1410,10 @@
       if (!a) return;
       if (!d.pagate) d.pagate = {};
       var c = d.pagate[a.id] ? Object.assign({}, d.pagate[a.id]) : {};
-      if (c[v]) delete c[v]; else c[v] = true;
+      var f = d.fisse.filter(function (x) { return String(x.id) === String(v); })[0];
+      var resto = f && f.arrotonda ? restoArrotondamento(f.importo) : 0;
+      if (c[v]) { delete c[v]; versaNelSalvadanaio(-resto); }
+      else { c[v] = true; versaNelSalvadanaio(resto); }
       d.pagate = Object.assign({}, d.pagate, {});
       d.pagate[a.id] = c;
       salva();
@@ -1298,12 +1427,20 @@
       var n = num(leggi("mImp"));
       if (n <= 0) { avviso = "L'importo deve essere maggiore di zero."; return render(); }
       var nuovaData = leggi("mData");
+      var differenzaResto = 0;
       d.spese = d.spese.map(function (x) {
         if (String(x.id) !== v) return x;
         var agg = Object.assign({}, x, { importo: arr(n), nota: leggi("mNota").trim() });
         if (nuovaData) agg.data = nuovaData;
+        // se era arrotondata, il resto segue il nuovo importo
+        if (x.arrotondato) {
+          var nuovoResto = restoArrotondamento(arr(n));
+          differenzaResto = arr(nuovoResto - x.arrotondato);
+          if (nuovoResto > 0) agg.arrotondato = nuovoResto; else delete agg.arrotondato;
+        }
         return agg;
       });
+      if (differenzaResto) versaNelSalvadanaio(differenzaResto);
       inModifica = null; spesaAperta = null; avviso = null; salva();
     },
     setCat: function (v, c) {
@@ -1339,6 +1476,22 @@
     sblocca: function (v) { muovi(v, "sblocca"); },
     rimetti: function (v) { muovi(v, "rimetti"); },
     trasferisciBper: function (v) { muovi(v, "trasferisciBper"); },
+    correggiSaldo: function (v) {
+      // Rettifica: scrive il saldo vero del pacchetto senza registrare nulla nel budget.
+      var testo = String(leggi("mov") || "").trim();
+      if (testo === "") { avviso = "Scrivi nel campo sopra quanto c’è davvero nel pacchetto."; return render(); }
+      var n = arr(num(testo));
+      if (n < 0) { avviso = "Il saldo non può essere negativo."; return render(); }
+      var pac = (d.pacchetti || []).filter(function (x) { return String(x.id) === String(v); })[0];
+      if (!pac) return;
+      var prima = pac.saldo;
+      d.pacchetti = d.pacchetti.map(function (x) {
+        return String(x.id) === String(v) ? Object.assign({}, x, { saldo: n }) : x;
+      });
+      bozza.mov = "";
+      avviso = "“" + pac.nome + "” corretto da " + euro(prima) + " a " + euro(n) + ". Il budget del mese non cambia.";
+      salva(true);
+    },
     usaCuscSuggerito: function () {
       var suggerito = suggerimentoCuscinetto();
       d.cuscinetto = suggerito;
@@ -1457,7 +1610,7 @@
       });
       bozza.mov = "";
       avviso = euro(n) + " registrati come trasferiti da “" + pac.nome + "” a BPER. Il budget mensile non cambia; esegui il bonifico dalla tua banca separatamente.";
-      salva();
+      salva(true);
       return;
     }
     if (verso === "sblocca" && n > pac.saldo) {
@@ -1570,6 +1723,7 @@
     else if (id === "mov") bozza.mov = ev.target.value;
     else if (id === "autoImporto") { aggiornaBudgetAccantonamento(); }
     else if (id === "autoNomePacchetto") bozza.autoNomePacchetto = ev.target.value;
+    else if (id === "scegliSalvadanaio") { /* letto al salvataggio */ }
     else if (id === "contoAttualeSaldo" || id === "bperSaldo" || id === "bperPac" || id === "bperFee" || id === "bperFeeFreq") { /* letti al salvataggio */ }
     else if (id === "mImp" || id === "mNota" || id === "mData") { /* letti al salvataggio */ }
     else if (id === "fNome") bozza.fNome = ev.target.value;
